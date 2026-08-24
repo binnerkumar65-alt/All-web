@@ -3,68 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Direct Live Telegram Feed</title>
+  <title>Telegram Cloud Gallery</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
     h2 { color: #38bdf8; margin-bottom: 20px; }
-    #feed { width: 100%; max-width: 650px; }
-    .card { background: #1e293b; border-left: 4px solid #38bdf8; border-radius: 8px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-    .card p { margin: 0 0 10px 0; line-height: 1.6; word-break: break-word; white-space: pre-line; }
-    a { color: #60a5fa; text-decoration: underline; word-break: break-all; }
-    .time { font-size: 0.85rem; color: #94a3b8; }
+    
+    /* Upload Box */
+    .upload-box { background: #1e293b; padding: 20px; border-radius: 8px; display: flex; gap: 10px; margin-bottom: 30px; border: 1px dashed #38bdf8; }
+    input[type="file"] { color: #94a3b8; }
+    button { padding: 10px 20px; background: #38bdf8; color: #0f172a; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
+    
+    /* Gallery Frame Grid */
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 800px; }
+    .gallery-card { aspect-ratio: 1 / 1; overflow: hidden; border-radius: 8px; background: #1e293b; cursor: pointer; border: 2px solid #334155; transition: transform 0.2s; }
+    .gallery-card:hover { transform: scale(1.04); border-color: #38bdf8; }
+    .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
+    
+    /* Image Modal (Zoom-in) */
+    .modal { display: none; position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+    .modal img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 0 20px rgba(56,189,248,0.5); }
   </style>
 </head>
 <body>
 
-  <h2>Live Telegram Channel Feed (Zero Storage)</h2>
-  <div id="feed">Telegram से डेटा लाया जा रहा है...</div>
+  <h2>Live Telegram Photo Gallery</h2>
+
+  <!-- Upload Section -->
+  <div class="upload-box">
+    <input type="file" id="photoInput" accept="image/*">
+    <button onclick="uploadImage()">Upload Photo</button>
+  </div>
+
+  <!-- Gallery Frame -->
+  <div class="gallery-grid" id="gallery">लोड हो रहा है...</div>
+
+  <!-- Big View Modal -->
+  <div class="modal" id="imgModal" onclick="this.style.display='none'">
+    <img id="fullImg" src="">
+  </div>
 
   <script>
-    const API_URL = "https://pdf-chaker-1.onrender.com/api/history";
+    const API_BASE = "https://pdf-chaker-1.onrender.com/api";
 
-    function linkify(text) {
-      if (!text) return "";
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
-    }
-
-    async function loadFeed() {
+    // 1. लोड फोटोस
+    async function fetchGallery() {
       try {
-        const response = await fetch(API_URL);
-        const dataList = await response.json();
-
-        const feedContainer = document.getElementById('feed');
-
-        if (!dataList || dataList.length === 0) {
-          feedContainer.innerHTML = 'चैनल में कोई मैसेज नहीं मिला।';
+        const res = await fetch(`${API_BASE}/gallery`);
+        const photos = await res.json();
+        const container = document.getElementById('gallery');
+        
+        if (!photos || photos.length === 0) {
+          container.innerHTML = "कोई फोटो नहीं मिली।";
           return;
         }
 
-        feedContainer.innerHTML = '';
-
-        dataList.forEach(item => {
+        container.innerHTML = "";
+        photos.forEach(p => {
           const card = document.createElement('div');
-          card.className = 'card';
-          
-          const formattedText = linkify(item.text);
-          const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString() : '';
-
-          card.innerHTML = `
-            <p>${formattedText}</p>
-            <div class="time">${dateStr}</div>
-          `;
-          feedContainer.appendChild(card);
+          card.className = 'gallery-card';
+          card.onclick = () => openModal(p.url);
+          card.innerHTML = `<img src="${p.url}" loading="lazy">`;
+          container.appendChild(card);
         });
-      } catch (error) {
-        console.error('Error fetching telegram feed:', error);
+      } catch (err) {
+        console.error(err);
       }
     }
 
-    // पहला लोड
-    loadFeed();
+    // 2. फोटो अपलोड फंक्शन
+    async function uploadImage() {
+      const fileInput = document.getElementById('photoInput');
+      if (!fileInput.files[0]) return alert("कृपया फोटो चुनें!");
 
-    // हर 5 सेकंड में सीधा Telegram से लाइव अपडेट्स
-    setInterval(loadFeed, 5000);
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      alert("अपलोड शुरू हो गया है, कृपया थोड़ा इंतजार करें...");
+
+      try {
+        const res = await fetch(`${API_BASE}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          fileInput.value = "";
+          fetchGallery(); // लिस्ट रिफ्रेश करें
+        } else {
+          alert("Error: " + data.error);
+        }
+      } catch (err) {
+        alert("Upload Fail!");
+      }
+    }
+
+    // 3. Modal Zoom
+    function openModal(url) {
+      document.getElementById('fullImg').src = url;
+      document.getElementById('imgModal').style.display = 'flex';
+    }
+
+    fetchGallery();
   </script>
 </body>
 </html>
