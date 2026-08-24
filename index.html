@@ -3,57 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telegram Cloud Gallery</title>
+  <title>Private Cloud Gallery</title>
   <style>
     body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-    h2 { color: #38bdf8; margin-bottom: 20px; }
+    h2 { color: #38bdf8; margin-bottom: 5px; }
     
-    /* Upload Box */
-    .upload-box { background: #1e293b; padding: 20px; border-radius: 8px; display: flex; gap: 10px; margin-bottom: 30px; border: 1px dashed #38bdf8; }
+    .device-info { background: #1e293b; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 25px; color: #38bdf8; border: 1px solid #334155; }
+    
+    /* Upload Box UI */
+    .upload-box { background: #1e293b; padding: 20px; border-radius: 12px; display: flex; gap: 12px; margin-bottom: 30px; border: 1px dashed #38bdf8; flex-wrap: wrap; justify-content: center; align-items: center; width: 100%; max-width: 500px; box-sizing: border-box; }
     input[type="file"] { color: #94a3b8; }
-    button { padding: 10px 20px; background: #38bdf8; color: #0f172a; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
-    
+    button { padding: 12px 24px; background: #38bdf8; color: #0f172a; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    button:hover { background: #0284c7; color: #fff; }
+
     /* Gallery Frame Grid */
-    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 800px; }
-    .gallery-card { aspect-ratio: 1 / 1; overflow: hidden; border-radius: 8px; background: #1e293b; cursor: pointer; border: 2px solid #334155; transition: transform 0.2s; }
-    .gallery-card:hover { transform: scale(1.04); border-color: #38bdf8; }
-    .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; width: 100%; max-width: 900px; }
+    .gallery-card { background: #1e293b; border-radius: 10px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s; }
+    .gallery-card:hover { transform: translateY(-4px); border-color: #38bdf8; }
     
-    /* Image Modal (Zoom-in) */
-    .modal { display: none; position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
-    .modal img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 0 20px rgba(56,189,248,0.5); }
+    .img-container { width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: #000; }
+    .img-container img { width: 100%; height: 100%; object-fit: cover; }
+    
+    /* Date Label */
+    .photo-date { padding: 8px; font-size: 0.75rem; color: #94a3b8; text-align: center; background: #1e293b; border-top: 1px solid #334155; }
+    
+    /* Lightbox Modal */
+    .modal { display: none; position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; flex-direction: column; }
+    .modal img { max-width: 90%; max-height: 80%; border-radius: 8px; box-shadow: 0 0 20px rgba(56,189,248,0.4); }
+    .modal-date { margin-top: 12px; color: #38bdf8; font-size: 0.9rem; }
   </style>
 </head>
 <body>
 
-  <h2>Live Telegram Photo Gallery</h2>
+  <h2>Private Cloud Gallery</h2>
+  <div class="device-info">🔑 आपकी प्राइवेट ID: <strong id="devCode">...</strong></div>
 
-  <!-- Upload Section -->
+  <!-- Manual Upload Section -->
   <div class="upload-box">
     <input type="file" id="photoInput" accept="image/*">
     <button onclick="uploadImage()">Upload Photo</button>
   </div>
 
-  <!-- Gallery Frame -->
-  <div class="gallery-grid" id="gallery">लोड हो रहा है...</div>
+  <!-- Private Gallery Grid -->
+  <div class="gallery-grid" id="gallery">आपकी तस्वीरें लोड हो रही हैं...</div>
 
-  <!-- Big View Modal -->
+  <!-- Zoom View Modal -->
   <div class="modal" id="imgModal" onclick="this.style.display='none'">
     <img id="fullImg" src="">
+    <div class="modal-date" id="modalDate"></div>
   </div>
 
   <script>
     const API_BASE = "https://pdf-chaker-1.onrender.com/api";
 
-    // 1. लोड फोटोस
+    // 1. 5-अंक का यूनिक डिवाइस कोड
+    function getDeviceId() {
+      let devId = localStorage.getItem('device_5digit_code');
+      if (!devId) {
+        devId = Math.floor(10000 + Math.random() * 90000).toString();
+        localStorage.setItem('device_5digit_code', devId);
+      }
+      document.getElementById('devCode').innerText = devId;
+      return devId;
+    }
+
+    const DEVICE_ID = getDeviceId();
+
+    // 2. सिर्फ इस डिवाइस की फोटो फैच करना
     async function fetchGallery() {
       try {
-        const res = await fetch(`${API_BASE}/gallery`);
+        const res = await fetch(`${API_BASE}/gallery?device_id=${DEVICE_ID}`);
         const photos = await res.json();
         const container = document.getElementById('gallery');
         
         if (!photos || photos.length === 0) {
-          container.innerHTML = "कोई फोटो नहीं मिली।";
+          container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>आपकी कोई फोटो अपलोड नहीं है।</p>";
           return;
         }
 
@@ -61,8 +85,18 @@
         photos.forEach(p => {
           const card = document.createElement('div');
           card.className = 'gallery-card';
-          card.onclick = () => openModal(p.url);
-          card.innerHTML = `<img src="${p.url}" loading="lazy">`;
+          
+          const dateObj = new Date(p.date);
+          const formattedDate = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+          card.onclick = () => openModal(p.url, formattedDate);
+          
+          card.innerHTML = `
+            <div class="img-container">
+              <img src="${p.url}" loading="lazy">
+            </div>
+            <div class="photo-date">📅 ${formattedDate}</div>
+          `;
           container.appendChild(card);
         });
       } catch (err) {
@@ -70,15 +104,16 @@
       }
     }
 
-    // 2. फोटो अपलोड फंक्शन
+    // 3. यूजर द्वारा चुनी गई फोटो अपलोड करना
     async function uploadImage() {
       const fileInput = document.getElementById('photoInput');
       if (!fileInput.files[0]) return alert("कृपया फोटो चुनें!");
 
       const formData = new FormData();
       formData.append('file', fileInput.files[0]);
+      formData.append('device_id', DEVICE_ID);
 
-      alert("अपलोड शुरू हो गया है, कृपया थोड़ा इंतजार करें...");
+      alert("फोटो अपलोड हो रही है...");
 
       try {
         const res = await fetch(`${API_BASE}/upload`, {
@@ -88,18 +123,19 @@
         const data = await res.json();
         if (data.success) {
           fileInput.value = "";
-          fetchGallery(); // लिस्ट रिफ्रेश करें
+          fetchGallery(); // रिफ्रेश
         } else {
           alert("Error: " + data.error);
         }
       } catch (err) {
-        alert("Upload Fail!");
+        alert("Upload Failed!");
       }
     }
 
-    // 3. Modal Zoom
-    function openModal(url) {
+    // 4. Modal Zoom
+    function openModal(url, dateStr) {
       document.getElementById('fullImg').src = url;
+      document.getElementById('modalDate').innerText = "Uploaded: " + dateStr;
       document.getElementById('imgModal').style.display = 'flex';
     }
 
