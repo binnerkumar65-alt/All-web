@@ -3,40 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Telegram Data Feed</title>
+  <title>Direct Live Telegram Feed</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #0f172a;
-      color: #e2e8f0;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
     h2 { color: #38bdf8; margin-bottom: 20px; }
     #feed { width: 100%; max-width: 650px; }
-    .card {
-      background-color: #1e293b;
-      border-left: 4px solid #38bdf8;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    .card p { margin: 0 0 10px 0; line-height: 1.6; word-break: break-word; }
+    .card { background: #1e293b; border-left: 4px solid #38bdf8; border-radius: 8px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    .card p { margin: 0 0 10px 0; line-height: 1.6; word-break: break-word; white-space: pre-line; }
     a { color: #60a5fa; text-decoration: underline; word-break: break-all; }
     .time { font-size: 0.85rem; color: #94a3b8; }
   </style>
 </head>
 <body>
 
-  <h2>Live Telegram Channel Feed</h2>
-  <div id="feed">डेटा लोड हो रहा है...</div>
+  <h2>Live Telegram Channel Feed (Zero Storage)</h2>
+  <div id="feed">Telegram से डेटा लाया जा रहा है...</div>
 
   <script>
-    const CHANNEL_NAME = "sxhckfufig"; 
+    const API_URL = "https://pdf-chaker-1.onrender.com/api/history";
 
     function linkify(text) {
       if (!text) return "";
@@ -44,65 +28,43 @@
       return text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
     }
 
-    async function fetchTelegramData() {
-      const feedContainer = document.getElementById('feed');
-      
-      // Multi-Proxy Fallback (अगर एक फेल होगा तो दूसरा खुद काम करेगा)
-      const proxies = [
-        `https://api.allorigins.win/get?url=${encodeURIComponent('https://t.me/s/' + CHANNEL_NAME)}`,
-        `https://corsproxy.io/?${encodeURIComponent('https://t.me/s/' + CHANNEL_NAME)}`
-      ];
+    async function loadFeed() {
+      try {
+        const response = await fetch(API_URL);
+        const dataList = await response.json();
 
-      for (let proxyUrl of proxies) {
-        try {
-          const response = await fetch(proxyUrl);
-          if (!response.ok) continue;
+        const feedContainer = document.getElementById('feed');
 
-          let htmlText = "";
-          if (proxyUrl.includes('allorigins')) {
-            const json = await response.json();
-            htmlText = json.contents;
-          } else {
-            htmlText = await response.text();
-          }
-
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(htmlText, 'text/html');
-          const messages = doc.querySelectorAll('.tgme_widget_message');
-
-          if (messages.length > 0) {
-            feedContainer.innerHTML = '';
-            Array.from(messages).reverse().forEach(msg => {
-              const textElement = msg.querySelector('.tgme_widget_message_text');
-              const timeElement = msg.querySelector('.tgme_widget_message_date time');
-
-              if (textElement) {
-                const card = document.createElement('div');
-                card.className = 'card';
-                
-                const rawText = textElement.innerText;
-                const formattedText = linkify(rawText);
-                const timeStr = timeElement ? timeElement.getAttribute('datetime') : '';
-
-                card.innerHTML = `
-                  <p>${formattedText}</p>
-                  <div class="time">${timeStr ? new Date(timeStr).toLocaleString() : ''}</div>
-                `;
-                feedContainer.appendChild(card);
-              }
-            });
-            return; // Successful fetch
-          }
-        } catch (err) {
-          console.log("Proxy failed, trying next...", err);
+        if (!dataList || dataList.length === 0) {
+          feedContainer.innerHTML = 'चैनल में कोई मैसेज नहीं मिला।';
+          return;
         }
-      }
 
-      feedContainer.innerHTML = 'डेटा लोड करने में समस्या आई। Telegram सर्वर ब्लॉक कर रहा है।';
+        feedContainer.innerHTML = '';
+
+        dataList.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          
+          const formattedText = linkify(item.text);
+          const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString() : '';
+
+          card.innerHTML = `
+            <p>${formattedText}</p>
+            <div class="time">${dateStr}</div>
+          `;
+          feedContainer.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error fetching telegram feed:', error);
+      }
     }
 
-    fetchTelegramData();
-    setInterval(fetchTelegramData, 10000);
+    // पहला लोड
+    loadFeed();
+
+    // हर 5 सेकंड में सीधा Telegram से लाइव अपडेट्स
+    setInterval(loadFeed, 5000);
   </script>
 </body>
 </html>
