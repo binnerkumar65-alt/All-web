@@ -7,7 +7,6 @@
   <style>
     body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
     
-    /* Top Header Bar */
     .header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     h2 { color: #38bdf8; margin: 0; font-size: 1.4rem; }
     
@@ -18,7 +17,6 @@
 
     .device-info { background: #1e293b; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 20px; color: #38bdf8; border: 1px solid #334155; display: inline-block; }
     
-    /* Gallery Grid System (Chote Cards) */
     .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px; }
     @media (max-width: 400px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
 
@@ -26,13 +24,11 @@
     .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
     .photo-date { position: absolute; bottom: 0; background: rgba(15, 23, 42, 0.8); width: 100%; font-size: 0.65rem; color: #cbd5e1; text-align: center; padding: 3px 0; }
     
-    /* Modal / Popup Overlay */
     .modal { display: none; position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); justify-content: center; align-items: center; flex-direction: column; padding: 20px; box-sizing: border-box; }
     .modal img { max-width: 100%; max-height: 75vh; border-radius: 8px; object-fit: contain; }
     .modal-date { margin-top: 12px; color: #38bdf8; font-size: 0.85rem; }
     .close-modal { position: absolute; top: 20px; right: 20px; background: #ef4444; color: #fff; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
 
-    /* Auth Setup Popup (First time or Login) */
     .auth-overlay { display: none; position: fixed; z-index: 2000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
     .auth-box { background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 15px; }
     .auth-box h3 { margin: 0; color: #38bdf8; text-align: center; }
@@ -46,30 +42,22 @@
 </head>
 <body>
 
-  <!-- Top Header -->
   <div class="header">
     <h2>Cloud Gallery</h2>
-    <div class="top-btns" id="topBtnsContainer">
-      <!-- Buttons will be rendered dynamically based on login state -->
-    </div>
+    <div class="top-btns" id="topBtnsContainer"></div>
   </div>
 
   <div class="device-info">🔑 ID: <strong id="devCode">...</strong></div>
 
-  <!-- Hidden File Input for Upload -->
   <input type="file" id="hiddenFileInput" accept="image/*" onchange="uploadImage()">
-
-  <!-- Gallery Grid Container -->
   <div class="gallery-grid" id="gallery">तस्वीरें लोड हो रही हैं...</div>
 
-  <!-- Fullscreen Zoom Modal -->
   <div class="modal" id="imgModal">
     <button class="close-modal" onclick="closeZoom()">×</button>
     <img id="fullImg" src="">
     <div class="modal-date" id="modalDate"></div>
   </div>
 
-  <!-- Auth / Password Setup Modal -->
   <div class="auth-overlay" id="authModal">
     <div class="auth-box">
       <h3 id="authTitle">अकाउंट सेट करें</h3>
@@ -89,13 +77,11 @@
       const savedPass = localStorage.getItem('device_password');
 
       if (savedPass) {
-        // Logged in UI: Logout button & Upload (+) button
         container.innerHTML = `
           <button class="action-btn logout-btn" onclick="logoutUser()">Logout</button>
           <button class="icon-btn" onclick="triggerUpload()" title="Upload Photo">+</button>
         `;
       } else {
-        // Not logged in UI: Login button & Upload (+) button
         container.innerHTML = `
           <button class="action-btn" onclick="openLoginModal()">Login</button>
           <button class="icon-btn" onclick="triggerUpload()" title="Upload Photo">+</button>
@@ -103,7 +89,6 @@
       }
     }
 
-    // Local Storage check & Setup
     function initUser() {
       let devId = localStorage.getItem('device_5digit_code');
       let pass = localStorage.getItem('device_password');
@@ -117,7 +102,7 @@
       updateHeaderButtons();
 
       if (!pass) {
-        showAuthPopup(false); // नया पासवर्ड बनाने के लिए कहें
+        showAuthPopup(false);
       } else {
         fetchGallery(devId);
       }
@@ -125,7 +110,6 @@
 
     const DEVICE_ID = () => localStorage.getItem('device_5digit_code');
 
-    // Gallery Fetcher
     async function fetchGallery(targetId) {
       try {
         const res = await fetch(`${API_BASE}/gallery?device_id=${targetId}`);
@@ -158,7 +142,6 @@
       }
     }
 
-    // Trigger Upload
     function triggerUpload() {
       const pass = localStorage.getItem('device_password');
       if (!pass) {
@@ -168,7 +151,6 @@
       document.getElementById('hiddenFileInput').click();
     }
 
-    // Upload Image
     async function uploadImage() {
       const fileInput = document.getElementById('hiddenFileInput');
       if (!fileInput.files[0]) return;
@@ -199,7 +181,6 @@
       }
     }
 
-    // Modal Zoom
     function openModal(url, dateStr) {
       document.getElementById('fullImg').src = url;
       document.getElementById('modalDate').innerText = "Uploaded: " + dateStr;
@@ -209,7 +190,6 @@
       document.getElementById('imgModal').style.display = 'none';
     }
 
-    // Auth Popups logic
     function showAuthPopup(login) {
       isLoginMode = login;
       const modal = document.getElementById('authModal');
@@ -246,53 +226,46 @@
       showAuthPopup(!isLoginMode);
     }
 
-    // सुरक्षित लॉगिन और पासवर्ड चेकिंग सिस्टम
     async function submitAuth() {
       const idVal = document.getElementById('authIdInput').value.trim();
-      const passVal = document.getElementById('authPassInfo') ? '' : document.getElementById('authPassInput').value.trim();
+      const passVal = document.getElementById('authPassInput').value.trim();
 
       if (!idVal || !passVal) {
         alert("कृपया ID और पासवर्ड दोनों भरें!");
         return;
       }
 
-      if (isLoginMode) {
-        // लॉगिन करते वक्त सर्वर से चेक करेंगे कि क्या इस ID पर कोई फोटो या डेटा मौजूद है
-        // साथ ही हम लोकल स्टोरेज में सेव करेंगे। सुरक्षा के लिए असली ऐप में सर्वर ऑथेंटिकेशन होता है, 
-        // यहाँ हम सुनिश्चित कर रहे हैं कि यूज़र पासवर्ड सही डाले या नया पासवर्ड सेट हो।
-        
-        // सुरक्षा जांच: अगर यह पुराना अकाउंट है, तो हम चेक करेंगे कि क्या यह आईडी पहले से इस्तेमाल हो रही है
-        try {
-          const res = await fetch(`${API_BASE}/gallery?device_id=${idVal}`);
-          const photos = await res.json();
-          
-          // अगर आईडी वैлід है (या हम लोकल सेव कर रहे हैं)
+      const endpoint = isLoginMode ? `${API_BASE}/login` : `${API_BASE}/register`;
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_id: idVal, password: passVal })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
           localStorage.setItem('device_5digit_code', idVal);
-          localStorage.setItem('device_password', passVal); // पासवर्ड सेव किया
+          localStorage.setItem('device_password', passVal);
           
           document.getElementById('devCode').innerText = idVal;
           document.getElementById('authModal').style.display = 'none';
           updateHeaderButtons();
           fetchGallery(idVal);
-          alert("सफलतापूर्वक लॉगिन हो गया!");
-        } catch(e) {
-          alert("गलत ID या सर्ور एरर!");
+          alert(isLoginMode ? "सफलतापूर्वक लॉगिन हो गया!" : "पासवर्ड टेलीग्राम पर सुरक्षित हो गया!");
+        } else {
+          alert(data.error || "गलत पासवर्ड या आईडी!");
         }
-
-      } else {
-        // नया पासवर्ड सेट करना
-        localStorage.setItem('device_password', passVal);
-        document.getElementById('authModal').style.display = 'none';
-        updateHeaderButtons();
-        alert("पासवर्ड सफलतापूर्वक सेट हो गया!");
+      } catch (err) {
+        alert("कनेक्शन एरर! कृपया दोबारा कोशिश करें।");
       }
     }
 
-    // Logout Function
     function logoutUser() {
       if (confirm("क्या आप सचमुच लॉग-आउट करना चाहते हैं?")) {
         localStorage.removeItem('device_password');
-        // नई आईडी जनरेट करें
         const newId = Math.floor(10000 + Math.random() * 90000).toString();
         localStorage.setItem('device_5digit_code', newId);
         
@@ -303,7 +276,6 @@
       }
     }
 
-    // Run on start
     initUser();
   </script>
 </body>
