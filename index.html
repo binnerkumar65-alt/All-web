@@ -16,18 +16,18 @@
       align-items: center;
     }
     h2 { color: #38bdf8; margin-bottom: 20px; }
-    #feed { width: 100%; max-width: 600px; }
+    #feed { width: 100%; max-width: 650px; }
     .card {
       background-color: #1e293b;
       border-left: 4px solid #38bdf8;
       border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    .card p { margin: 0 0 8px 0; line-height: 1.5; white-space: pre-line; word-break: break-word; }
+    .card p { margin: 0 0 10px 0; line-height: 1.6; word-break: break-word; }
     a { color: #60a5fa; text-decoration: underline; word-break: break-all; }
-    .time { font-size: 0.8rem; color: #94a3b8; }
+    .time { font-size: 0.85rem; color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -47,49 +47,58 @@
     async function fetchTelegramData() {
       const feedContainer = document.getElementById('feed');
       
-      // CORS Bypass URL for local file support
-      const targetUrl = `https://t.me/s/${CHANNEL_NAME}`;
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+      // Multi-Proxy Fallback (अगर एक फेल होगा तो दूसरा खुद काम करेगा)
+      const proxies = [
+        `https://api.allorigins.win/get?url=${encodeURIComponent('https://t.me/s/' + CHANNEL_NAME)}`,
+        `https://corsproxy.io/?${encodeURIComponent('https://t.me/s/' + CHANNEL_NAME)}`
+      ];
 
-      try {
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error("Network Error");
-        
-        const htmlText = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlText, 'text/html');
-        const messages = doc.querySelectorAll('.tgme_widget_message');
+      for (let proxyUrl of proxies) {
+        try {
+          const response = await fetch(proxyUrl);
+          if (!response.ok) continue;
 
-        if (messages.length === 0) {
-          feedContainer.innerHTML = 'चैनल में अभी कोई मैसेज नहीं मिला।';
-          return;
-        }
-
-        feedContainer.innerHTML = '';
-
-        Array.from(messages).reverse().forEach(msg => {
-          const textElement = msg.querySelector('.tgme_widget_message_text');
-          const timeElement = msg.querySelector('.tgme_widget_message_date time');
-
-          if (textElement) {
-            const card = document.createElement('div');
-            card.className = 'card';
-            
-            const rawText = textElement.innerText;
-            const formattedText = linkify(rawText);
-            const timeStr = timeElement ? timeElement.getAttribute('datetime') : '';
-
-            card.innerHTML = `
-              <p>${formattedText}</p>
-              <div class="time">${timeStr ? new Date(timeStr).toLocaleString() : ''}</div>
-            `;
-            feedContainer.appendChild(card);
+          let htmlText = "";
+          if (proxyUrl.includes('allorigins')) {
+            const json = await response.json();
+            htmlText = json.contents;
+          } else {
+            htmlText = await response.text();
           }
-        });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        feedContainer.innerHTML = 'डेटा लोड करने में समस्या आई। कृपया नेटवर्क चेक करें या GitHub Pages पर चलाएं।';
+
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlText, 'text/html');
+          const messages = doc.querySelectorAll('.tgme_widget_message');
+
+          if (messages.length > 0) {
+            feedContainer.innerHTML = '';
+            Array.from(messages).reverse().forEach(msg => {
+              const textElement = msg.querySelector('.tgme_widget_message_text');
+              const timeElement = msg.querySelector('.tgme_widget_message_date time');
+
+              if (textElement) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                const rawText = textElement.innerText;
+                const formattedText = linkify(rawText);
+                const timeStr = timeElement ? timeElement.getAttribute('datetime') : '';
+
+                card.innerHTML = `
+                  <p>${formattedText}</p>
+                  <div class="time">${timeStr ? new Date(timeStr).toLocaleString() : ''}</div>
+                `;
+                feedContainer.appendChild(card);
+              }
+            });
+            return; // Successful fetch
+          }
+        } catch (err) {
+          console.log("Proxy failed, trying next...", err);
+        }
       }
+
+      feedContainer.innerHTML = 'डेटा लोड करने में समस्या आई। Telegram सर्वर ब्लॉक कर रहा है।';
     }
 
     fetchTelegramData();
