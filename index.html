@@ -8,9 +8,9 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
         body { background-color: #121212; color: #fff; padding: 20px; }
         .container { max-width: 800px; margin: auto; }
-        h2 { margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; color: #00bcd4; }
+        h2 { margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; color: #00bcd4; margin-top: 25px; }
         
-        /* Delete Bar for Photos */
+        /* Fixed Action Bar for Deleting Photos */
         #delete-action-bar {
             display: none;
             position: fixed;
@@ -22,17 +22,35 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             z-index: 1000;
         }
-        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn { padding: 10px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-danger { background: #e53935; color: white; }
         .btn-cancel { background: #555; color: white; }
         .btn-primary { background: #00bcd4; color: white; }
         .btn-sm { padding: 5px 10px; font-size: 12px; margin-left: 5px; }
 
+        /* Photo Upload Section */
+        .upload-section { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .upload-form { display: flex; gap: 10px; align-items: center; }
+        input[type="file"] { background: #222; padding: 8px; border-radius: 4px; color: #fff; flex: 1; border: 1px solid #333; }
+
         /* Gallery Grid */
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 30px; }
-        .photo-card { position: relative; width: 100%; height: 120px; border-radius: 8px; overflow: hidden; border: 3px solid transparent; cursor: pointer; }
-        .photo-card img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-card { position: relative; width: 100%; height: 120px; border-radius: 8px; overflow: hidden; border: 3px solid transparent; cursor: pointer; user-select: none; }
+        .photo-card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         .photo-card.selected { border-color: #e53935; transform: scale(0.95); }
+
+        /* Full View Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal img { max-width: 90%; max-height: 80%; border-radius: 8px; }
+        .modal-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 30px; cursor: pointer; }
 
         /* Notes Section */
         .note-input-group { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -46,7 +64,7 @@
 <body>
 
 <div class="container">
-    <!-- Photo Action Bar (Hidden by default) -->
+    <!-- Delete Action Bar (Photo Select Mode) -->
     <div id="delete-action-bar">
         <span id="selected-count">0 फोटो चुनी गईं</span>
         <div>
@@ -55,20 +73,35 @@
         </div>
     </div>
 
-    <!-- Gallery Section -->
-    <h2>📸 आपकी गैलरी</h2>
-    <div class="gallery-grid" id="gallery-container">
-        <!-- Photos dynamically added here -->
+    <!-- 1. Photo Upload Form -->
+    <h2>📤 फोटो अपलोड करें</h2>
+    <div class="upload-section">
+        <form id="upload-form" class="upload-form" onsubmit="uploadPhoto(event)">
+            <input type="file" id="photo-file" accept="image/*" required>
+            <button type="submit" class="btn btn-primary" id="upload-btn">अपलोड करें</button>
+        </form>
     </div>
 
-    <!-- Notes Section -->
+    <!-- 2. Gallery Section -->
+    <h2>📸 आपकी गैलरी</h2>
+    <div class="gallery-grid" id="gallery-container">
+        <!-- Photos here -->
+    </div>
+
+    <!-- Full Photo Viewer Modal -->
+    <div id="photo-modal" class="modal" onclick="closePhotoModal()">
+        <span class="modal-close">&times;</span>
+        <img id="modal-img" src="" alt="Full View">
+    </div>
+
+    <!-- 3. Notes Section -->
     <h2>📝 आपके नोट्स</h2>
     <div class="note-input-group">
         <textarea id="new-note-input" placeholder="नया नोट लिखें..."></textarea>
         <button class="btn btn-primary" onclick="saveNote()">सेव करें</button>
     </div>
     <div class="notes-list" id="notes-container">
-        <!-- Notes dynamically added here -->
+        <!-- Notes here -->
     </div>
 </div>
 
@@ -79,16 +112,52 @@ let currentDeviceId = localStorage.getItem("device_id") || "DEMO_DEVICE";
 let selectedPhotos = [];
 let isSelectionMode = false;
 let longPressTimer = null;
+let isLongPressTriggered = false;
 
-// Page Initialize
 window.onload = () => {
     loadGallery();
     fetchNotes();
 };
 
 // ==========================================
-// 1. PHOTO GALLERY LOGIC (Hold & Cancel Fixed)
+// 1. PHOTO UPLOADER & GALLERY (LONG PRESS FIX)
 // ==========================================
+async function uploadPhoto(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById("photo-file");
+    const uploadBtn = document.getElementById("upload-btn");
+    
+    if (!fileInput.files[0]) return alert("कृपया फोटो चुनें!");
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("device_id", currentDeviceId);
+
+    try {
+        uploadBtn.disabled = true;
+        uploadBtn.innerText = "अपलोड हो रहा है...";
+        
+        const res = await fetch(`${API_BASE}/upload`, {
+            method: "POST",
+            body: formData
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            alert("फोटो अपलोड हो गई!");
+            fileInput.value = "";
+            loadGallery();
+        } else {
+            alert("अपलोड एरर: " + (data.error || ""));
+        }
+    } catch (err) {
+        alert("अपलोड में एरर आया!");
+    } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.innerText = "अपलोड करें";
+    }
+}
+
 async function loadGallery() {
     try {
         const res = await fetch(`${API_BASE}/gallery?device_id=${currentDeviceId}`);
@@ -102,39 +171,50 @@ async function loadGallery() {
             card.dataset.id = photo.id;
             card.innerHTML = `<img src="${photo.url}" alt="Photo">`;
             
-            setupPhotoHoldEvents(card, photo.id);
+            setupPhotoHoldEvents(card, photo);
             container.appendChild(card);
         });
     } catch (err) {
-        console.error("Gallery Load Error:", err);
+        console.error("Gallery Error:", err);
     }
 }
 
-function setupPhotoHoldEvents(element, photoId) {
-    const startHold = () => {
+function setupPhotoHoldEvents(element, photo) {
+    const startHold = (e) => {
+        isLongPressTriggered = false;
         longPressTimer = setTimeout(() => {
+            isLongPressTriggered = true;
             enableSelectionMode();
-            togglePhotoSelect(element, photoId);
-        }, 400); // 400ms दबाने पर सेलेक्शन मोड शुरू
+            togglePhotoSelect(element, photo.id);
+        }, 500); // 500ms दबाकर रखने पर सेलेक्शन चालू होगा
     };
 
     const clearHold = () => {
-        if (longPressTimer) clearTimeout(longPressTimer);
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
     };
 
-    // Long press detection
+    // Touch and Mouse events for Hold
+    element.addEventListener("touchstart", startHold, { passive: true });
     element.addEventListener("mousedown", startHold);
-    element.addEventListener("touchstart", startHold);
 
-    // Cancel timer only if released BEFORE selection mode starts
-    element.addEventListener("mouseleave", clearHold);
-    element.addEventListener("touchmove", clearHold);
+    element.addEventListener("touchend", clearHold);
+    element.addEventListener("mouseup", clearHold);
+    element.addEventListener("touchmove", clearHold, { passive: true });
 
-    // Click logic
+    // Click behavior
     element.addEventListener("click", (e) => {
-        clearHold();
+        if (isLongPressTriggered) {
+            isLongPressTriggered = false;
+            return;
+        }
+
         if (isSelectionMode) {
-            togglePhotoSelect(element, photoId);
+            togglePhotoSelect(element, photo.id);
+        } else {
+            openPhotoModal(photo.url);
         }
     });
 }
@@ -144,7 +224,7 @@ function enableSelectionMode() {
     document.getElementById("delete-action-bar").style.display = "flex";
 }
 
-// Cancel दबाने पर ही ऑप्शन्स और सेलेक्शन हटेगा
+// जब तक Cancel पर क्लिक न करें, मोड चालू रहेगा
 function cancelSelection() {
     isSelectionMode = false;
     selectedPhotos = [];
@@ -163,15 +243,10 @@ function togglePhotoSelect(element, photoId) {
     }
     
     document.getElementById("selected-count").innerText = `${selectedPhotos.length} फोटो चुनी गईं`;
-
-    // अगर एक भी फोटो सेलेक्ट न रहे तो ऑटो-कैंसिल कर सकते हैं
-    if (selectedPhotos.length === 0) {
-        cancelSelection();
-    }
 }
 
 async function deleteSelectedPhotos() {
-    if (selectedPhotos.length === 0) return;
+    if (selectedPhotos.length === 0) return alert("कोई फोटो सेलेक्ट नहीं है!");
     if (!confirm("क्या आप चुनी हुई फोटो डिलीट करना चाहते हैं?")) return;
 
     try {
@@ -190,9 +265,18 @@ async function deleteSelectedPhotos() {
     }
 }
 
+function openPhotoModal(url) {
+    document.getElementById("modal-img").src = url;
+    document.getElementById("photo-modal").style.display = "flex";
+}
+
+function closePhotoModal() {
+    document.getElementById("photo-modal").style.display = "none";
+}
+
 
 // ==========================================
-// 2. NOTES EDIT & DELETE LOGIC
+// 2. NOTES SYSTEM (Edit & Delete)
 // ==========================================
 async function fetchNotes() {
     try {
@@ -204,8 +288,6 @@ async function fetchNotes() {
         notes.forEach(note => {
             const card = document.createElement("div");
             card.className = "note-card";
-            
-            // HTML Escaping to prevent breakages
             const safeText = note.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             
             card.innerHTML = `
@@ -218,7 +300,7 @@ async function fetchNotes() {
             container.appendChild(card);
         });
     } catch (err) {
-        console.error("Notes Fetch Error:", err);
+        console.error("Notes Error:", err);
     }
 }
 
@@ -241,7 +323,7 @@ async function saveNote() {
             alert("नोट सेव नहीं हो सका!");
         }
     } catch (err) {
-        alert("सर्वर एरर! नोट सेव नहीं हो सका।");
+        alert("सर्वर एरर!");
     }
 }
 
@@ -268,7 +350,7 @@ async function editNote(msgId, oldText) {
     if (newText === null || newText.trim() === "" || newText.trim() === oldText) return;
 
     try {
-        // Step 1: पुराना नोट डिलीट करें
+        // Step 1: पुराना नोट डिलीट करें (/api/delete endpoint का उपयोग करके)
         await fetch(`${API_BASE}/delete`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
