@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Private Cloud Gallery</title>
+  <title>Cloud Gallery & Editable Notes</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding-bottom: 70px; }
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding-bottom: 80px; }
     
-    .header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     h2 { color: #38bdf8; margin: 0; font-size: 1.4rem; }
     
     .top-btns { display: flex; gap: 8px; align-items: center; }
@@ -15,36 +15,68 @@
     .action-btn { background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 0 10px; height: 36px; border-radius: 18px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
     .logout-btn { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
 
-    .device-info { background: #1e293b; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 20px; color: #38bdf8; border: 1px solid #334155; display: inline-block; }
+    .device-info { background: #1e293b; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 15px; color: #38bdf8; border: 1px solid #334155; display: inline-block; }
     
+    .note-box { width: 100%; max-width: 500px; background: #1e293b; border-radius: 12px; padding: 12px; border: 1px solid #334155; margin-bottom: 20px; box-sizing: border-box; }
+    .note-box textarea { width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px; padding: 10px; box-sizing: border-box; resize: none; font-size: 0.9rem; outline: none; }
+    .note-btn-group { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .save-note-btn { background: #38bdf8; color: #0f172a; border: none; font-weight: bold; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+    .cancel-edit-btn { background: #475569; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; display: none; }
+
+    .notes-list { width: 100%; max-width: 500px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .note-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .note-text { font-size: 0.9rem; color: #e2e8f0; word-break: break-word; flex-grow: 1; margin-right: 10px; }
+    .note-actions { display: flex; gap: 6px; }
+    .note-act-btn { border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .edit-note-btn { background: #f59e0b; color: #0f172a; }
+    .del-note-btn { background: #ef4444; color: #fff; }
+
     .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px; }
     @media (max-width: 400px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
 
     .gallery-card { background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; cursor: pointer; aspect-ratio: 1 / 1; position: relative; user-select: none; }
     .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
-    .photo-date { position: absolute; bottom: 0; background: rgba(15, 23, 42, 0.8); width: 100%; font-size: 0.65rem; color: #cbd5e1; text-align: center; padding: 3px 0; }
     
-    /* सेलेक्टेड फोटो पर टिक मार्क और बॉर्डर */
-    .gallery-card.selected { border: 3px solid #38bdf8; transform: scale(0.96); }
-    .gallery-card.selected::after { content: '✔'; position: absolute; top: 6px; right: 6px; background: #38bdf8; color: #0f172a; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; }
+    .selected-card { border: 3px solid #ef4444; }
+    .selected-card::after { content: '✓'; position: absolute; top: 5px; right: 5px; background: #ef4444; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
 
-    /* डिलीट फ्लोटिंग बार */
-    .action-bar { display: none; position: fixed; bottom: 15px; background: #1e293b; border: 1px solid #334155; padding: 10px 20px; border-radius: 30px; z-index: 1500; gap: 15px; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-    .delete-btn-bar { background: #ef4444; color: #fff; border: none; padding: 8px 16px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-    .cancel-select-btn { background: transparent; color: #94a3b8; border: none; cursor: pointer; font-size: 0.9rem; }
+    .delete-floating-bar { display: none; position: fixed; bottom: 20px; background: #1e293b; border: 1px solid #ef4444; padding: 10px 20px; border-radius: 30px; z-index: 2500; gap: 15px; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .delete-btn-bar { background: #ef4444; color: #fff; border: none; padding: 8px 18px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
 
-    .modal { display: none; position: fixed; z-index: 2000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); justify-content: center; align-items: center; flex-direction: column; padding: 20px; box-sizing: border-box; }
-    .modal img { max-width: 100%; max-height: 75vh; border-radius: 8px; object-fit: contain; }
-    .modal-date { margin-top: 12px; color: #38bdf8; font-size: 0.85rem; }
-    .close-modal { position: absolute; top: 20px; right: 20px; background: #ef4444; color: #fff; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
+    .skeleton-card { background: #1e293b; border-radius: 8px; aspect-ratio: 1 / 1; position: relative; overflow: hidden; border: 1px solid #334155; }
+    .skeleton-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent); animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+    /* Pop-up Modals for Errors */
+    .error-popup { display: none; position: fixed; z-index: 5000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+    .error-card { background: #1e293b; padding: 25px; border-radius: 14px; width: 90%; max-width: 350px; border: 1px solid #ef4444; text-align: center; }
+    .error-card h3 { color: #ef4444; margin-top: 0; }
+    .error-card p { color: #cbd5e1; font-size: 0.9rem; margin-bottom: 20px; }
+    .error-card button { background: #38bdf8; color: #0f172a; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+    .snap-camera-modal { display: none; position: fixed; z-index: 4000; top: 0; left: 0; width: 100%; height: 100%; background: #000; flex-direction: column; justify-content: space-between; align-items: center; padding: 15px 0; box-sizing: border-box; }
+    .snap-top-bar { width: 100%; max-width: 450px; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; }
+    .cam-opt-btn { background: rgba(255,255,255,0.2); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; }
+    
+    .snap-view-box { position: relative; width: 100%; max-width: 450px; height: 65vh; border-radius: 20px; overflow: hidden; background: #111; display: flex; justify-content: center; align-items: center; }
+    #snapVideo { width: 100%; height: 100%; object-fit: cover; }
+    .timer-overlay { position: absolute; font-size: 5rem; color: #fffc00; font-weight: bold; display: none; z-index: 10; }
+
+    .snap-filters-tray { display: flex; gap: 12px; width: 90%; max-width: 400px; overflow-x: auto; padding: 5px; scrollbar-width: none; }
+    .snap-filter-icon { min-width: 65px; height: 65px; border-radius: 50%; border: 2px solid #fffc00; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; color: #fff; cursor: pointer; font-weight: bold; }
+    .snap-filter-icon.active { border: 3px solid #fff; transform: scale(1.05); }
+
+    .snap-shutter { width: 75px; height: 75px; border-radius: 50%; background: transparent; border: 5px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .snap-shutter-inner { width: 60px; height: 60px; border-radius: 50%; background: #fff; }
+
+    .modal { display: none; position: fixed; z-index: 2000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+    .modal img { max-width: 100%; max-height: 75vh; border-radius: 8px; }
+    .close-modal { position: absolute; top: 20px; right: 20px; background: #ef4444; color: #fff; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
 
     .auth-overlay { display: none; position: fixed; z-index: 3000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
     .auth-box { background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 15px; }
-    .auth-box h3 { margin: 0; color: #38bdf8; text-align: center; }
-    .auth-box input { padding: 10px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 1rem; }
+    .auth-box input { padding: 10px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 6px; }
     .auth-box button { padding: 10px; background: #38bdf8; color: #0f172a; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
-    .auth-box .switch-mode { font-size: 0.8rem; text-align: center; color: #94a3b8; cursor: pointer; }
-    .auth-box .switch-mode span { color: #38bdf8; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -56,334 +88,462 @@
 
   <div class="device-info">🔑 ID: <strong id="devCode">...</strong></div>
 
-  <input type="file" id="hiddenFileInput" accept="image/*" multiple style="display: none;" onchange="uploadImagesSequentially()">
-  
-  <div class="gallery-grid" id="gallery">तस्वीरें लोड हो रही हैं...</div>
-
-  <!-- डिलीट करने के लिए नीचे तैरता हुआ एक्शन बार -->
-  <div class="action-bar" id="actionBar">
-    <span id="selectedCountText" style="font-size: 0.9rem; color: #38bdf8; font-weight: bold;">0 selected</span>
-    <button class="delete-btn-bar" onclick="deleteSelectedPhotos()">Delete</button>
-    <button class="cancel-select-btn" onclick="clearSelection()">Cancel</button>
+  <!-- Note Input -->
+  <div class="note-box">
+    <textarea id="noteInput" rows="2" placeholder="कोई ज़रूरी टेक्स्ट/नोट लिखें..."></textarea>
+    <div class="note-btn-group">
+      <button class="cancel-edit-btn" id="cancelEditBtn" onclick="cancelEditNote()">रद्द करें</button>
+      <button class="save-note-btn" id="saveNoteBtn" onclick="saveTextNote()">नोट सेव करें</button>
+    </div>
   </div>
+
+  <div class="notes-list" id="notesList"></div>
+
+  <input type="file" id="hiddenFileInput" accept="image/*" multiple style="display: none;" onchange="uploadImagesSequentially(this)">
+  
+  <div class="gallery-grid" id="gallery"></div>
+
+  <!-- Floating Delete Bar -->
+  <div class="delete-floating-bar" id="deleteBar">
+    <span id="selectedCount">1 फोटो चुनी गई</span>
+    <button class="delete-btn-bar" onclick="deleteSelectedPhotos()">हटायें (Delete)</button>
+    <button style="background:transparent; color:#94a3b8; border:none;" onclick="cancelSelection()">रद्द करें</button>
+  </div>
+
+  <!-- Internet Error Popup -->
+  <div class="error-popup" id="offlineModal">
+    <div class="error-card">
+      <h3>⚠️ कोई इंटरनेट कनेक्शन नहीं</h3>
+      <p>कृपया अपना नेटवर्क कनेक्शन जांचें और दोबारा प्रयास करें।</p>
+      <button onclick="window.location.reload()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <!-- Server Crash Popup -->
+  <div class="error-popup" id="serverErrorModal">
+    <div class="error-card">
+      <h3>🛠️ सर्वर कनेक्ट नहीं हो सका</h3>
+      <p>सर्वर रिस्पॉन्स नहीं दे रहा है या क्रैश हो गया है।</p>
+      <button onclick="retryServerConnection()">🔁 Try Again</button>
+    </div>
+  </div>
+
+  <!-- Camera Modal -->
+  <div class="snap-camera-modal" id="snapCameraModal">
+    <div class="snap-top-bar">
+      <button class="cam-opt-btn" onclick="toggleCameraFacing()">🔄</button>
+      <button class="cam-opt-btn" id="timerBtn" onclick="toggleTimer()">⏱️ Off</button>
+      <button class="cam-opt-btn" onclick="closeSnapCamera()">✕</button>
+    </div>
+
+    <div class="snap-view-box">
+      <video id="snapVideo" autoplay playsinline></video>
+      <div class="timer-overlay" id="timerCount">3</div>
+    </div>
+    
+    <div class="snap-filters-tray">
+      <div class="snap-filter-icon active" onclick="setSnapFilter('none')">Normal</div>
+      <div class="snap-filter-icon" onclick="setSnapFilter('brightness(1.2) contrast(1.1) saturate(1.3)')">✨ Glow</div>
+      <div class="snap-filter-icon" onclick="setSnapFilter('sepia(0.4) contrast(1.2)')">📼 90s</div>
+    </div>
+
+    <div class="snap-shutter" onclick="startCaptureSequence()"><div class="snap-shutter-inner"></div></div>
+  </div>
+
+  <canvas id="snapCanvas" style="display: none;"></canvas>
 
   <div class="modal" id="imgModal">
     <button class="close-modal" onclick="closeZoom()">×</button>
     <img id="fullImg" src="">
-    <div class="modal-date" id="modalDate"></div>
   </div>
 
   <div class="auth-overlay" id="authModal">
     <div class="auth-box">
-      <h3 id="authTitle">अकाउंट सेट करें</h3>
+      <h3>अकाउंट सेट करें</h3>
       <input type="text" id="authIdInput" placeholder="5-अंक की ID">
-      <input type="password" id="authPassInput" placeholder="पासवर्ड दर्ज करें">
-      <button id="authBtn" onclick="submitAuth()">आगे बढ़ें</button>
-      <div class="switch-mode" id="switchText" onclick="toggleAuthMode()">पुराना अकाउंट है? <span>लॉगिन करें</span></div>
+      <input type="password" id="authPassInput" placeholder="पासवर्ड">
+      <button onclick="submitAuth()">आगे बढ़ें</button>
     </div>
   </div>
 
   <script>
     const API_BASE = "https://pdf-chaker-1.onrender.com/api";
-    let isLoginMode = false;
-    let selectedPhotoIds = new Set();
+    let mediaStream = null;
+    let useFrontCamera = true;
+    let timerEnabled = false;
+    let selectedPhotos = [];
     let isSelectionMode = false;
+    let currentFilter = 'none';
+    let editingNoteId = null;
+
+    // Check Network on Load
+    window.addEventListener('offline', () => showOfflinePopup());
+    window.addEventListener('online', () => hideOfflinePopup());
+
+    function showOfflinePopup() { document.getElementById('offlineModal').style.display = 'flex'; }
+    function hideOfflinePopup() { document.getElementById('offlineModal').style.display = 'none'; }
+    function showServerErrorPopup() { document.getElementById('serverErrorModal').style.display = 'flex'; }
+    function hideServerErrorPopup() { document.getElementById('serverErrorModal').style.display = 'none'; }
+
+    function retryServerConnection() {
+      hideServerErrorPopup();
+      initUser();
+    }
 
     function updateHeaderButtons() {
       const container = document.getElementById('topBtnsContainer');
       const savedPass = localStorage.getItem('device_password');
-
       if (savedPass) {
         container.innerHTML = `
           <button class="action-btn logout-btn" onclick="logoutUser()">Logout</button>
-          <button class="icon-btn" onclick="triggerUpload()" title="Upload Photo">+</button>
+          <button class="icon-btn" onclick="openSnapCamera()">📸</button>
+          <button class="icon-btn" onclick="triggerUpload()">+</button>
         `;
       } else {
         container.innerHTML = `
-          <button class="action-btn" onclick="openLoginModal()">Login</button>
-          <button class="icon-btn" onclick="triggerUpload()" title="Upload Photo">+</button>
+          <button class="action-btn" onclick="showAuthPopup()">Login</button>
+          <button class="icon-btn" onclick="openSnapCamera()">📸</button>
+          <button class="icon-btn" onclick="triggerUpload()">+</button>
         `;
       }
     }
 
     function initUser() {
-      let devId = localStorage.getItem('device_5digit_code');
-      let pass = localStorage.getItem('device_password');
-
-      if (!devId) {
-        devId = Math.floor(10000 + Math.random() * 90000).toString();
-        localStorage.setItem('device_5digit_code', devId);
+      if (!navigator.onLine) {
+        showOfflinePopup();
+        return;
       }
 
+      let devId = localStorage.getItem('device_5digit_code') || Math.floor(10000 + Math.random() * 90000).toString();
+      localStorage.setItem('device_5digit_code', devId);
       document.getElementById('devCode').innerText = devId;
       updateHeaderButtons();
-
-      if (!pass) {
-        showAuthPopup(false);
-      } else {
+      
+      loadLocalNotes();
+      loadCachedGallery(devId);
+      
+      if (localStorage.getItem('device_password')) {
         fetchGallery(devId);
       }
     }
 
     const DEVICE_ID = () => localStorage.getItem('device_5digit_code');
 
-    async function fetchGallery(targetId) {
-      try {
-        const res = await fetch(`${API_BASE}/gallery?device_id=${targetId}`);
-        const photos = await res.json();
-        const container = document.getElementById('gallery');
-        
-        if (!photos || photos.length === 0) {
-          container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8; margin-top:30px;'>कोई फोटो मौजूद नहीं है।</p>";
+    /* Local Notes Handling - Max 10 Notes in Local Cache */
+    function getStoredNotes() {
+      return JSON.parse(localStorage.getItem(`notes_${DEVICE_ID()}`) || '[]');
+    }
+
+    function saveLocalNotes(notes) {
+      // Limit to initial 10 notes for local cache
+      const limitedNotes = notes.slice(0, 10);
+      localStorage.setItem(`notes_${DEVICE_ID()}`, JSON.stringify(limitedNotes));
+      renderNotes(notes);
+    }
+
+    function renderNotes(notesToRender) {
+      const notes = notesToRender || getStoredNotes();
+      const container = document.getElementById('notesList');
+      container.innerHTML = "";
+
+      notes.forEach((note) => {
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        card.innerHTML = `
+          <div class="note-text">${note.text}</div>
+          <div class="note-actions">
+            <button class="note-act-btn edit-note-btn" onclick="editNote('${note.id}')">Edit</button>
+            <button class="note-act-btn del-note-btn" onclick="deleteNote('${note.id}')">Delete</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function loadLocalNotes() { renderNotes(); }
+
+    async function saveTextNote() {
+      if (!navigator.onLine) return showOfflinePopup();
+
+      const textInput = document.getElementById('noteInput');
+      const text = textInput.value.trim();
+      if (!text) return alert("कृपया कुछ टेक्स्ट लिखें!");
+
+      let notes = getStoredNotes();
+
+      if (editingNoteId) {
+        notes = notes.map(n => n.id === editingNoteId ? { ...n, text: text } : n);
+        editingNoteId = null;
+        document.getElementById('saveNoteBtn').innerText = "नोट सेव करें";
+        document.getElementById('cancelEditBtn').style.display = "none";
+      } else {
+        const newNote = { id: Date.now().toString(), text: text };
+        notes.unshift(newNote);
+
+        const formData = new FormData();
+        formData.append('text_note', text);
+        formData.append('device_id', DEVICE_ID());
+
+        try { 
+          const res = await fetch(`${API_BASE}/upload-note`, { method: 'POST', body: formData });
+          if (!res.ok) throw new Error();
+        } catch (e) {
+          showServerErrorPopup();
           return;
         }
+      }
 
-        container.innerHTML = "";
-        photos.forEach(p => {
-          const card = document.createElement('div');
-          card.className = 'gallery-card';
-          if (selectedPhotoIds.has(p.id)) {
-            card.classList.add('selected');
-          }
-          
-          const dateObj = new Date(p.date);
-          const formattedDate = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      saveLocalNotes(notes);
+      textInput.value = "";
+    }
 
-          // क्लिक करने पर ज़ूम या सिलेक्शन हैंडल होगा
-          card.onclick = () => {
-            if (isSelectionMode) {
-              toggleSelectPhoto(p.id, card);
-            } else {
-              openModal(p.url, formattedDate);
-            }
-          };
-
-          // लॉन्ग प्रेस (Hold) करने पर सिलेक्शन मोड शुरू होगा
-          card.oncontextmenu = (e) => {
-            e.preventDefault();
-            startSelectionMode(p.id, card);
-          };
-
-          // मोबाइल के लिए टच होल्ड हैंडलर
-          let pressTimer;
-          card.ontouchstart = () => {
-            pressTimer = setTimeout(() => {
-              startSelectionMode(p.id, card);
-            }, 600); // 0.6 सेकंड होल्ड
-          };
-          card.ontouchend = () => clearTimeout(pressTimer);
-          card.ontouchmove = () => clearTimeout(pressTimer);
-          
-          card.innerHTML = `
-            <img src="${p.url}" loading="lazy">
-            <div class="photo-date">${formattedDate}</div>
-          `;
-          container.appendChild(card);
-        });
-      } catch (err) {
-        console.error(err);
+    function editNote(id) {
+      const notes = getStoredNotes();
+      const noteToEdit = notes.find(n => n.id === id);
+      if (noteToEdit) {
+        document.getElementById('noteInput').value = noteToEdit.text;
+        editingNoteId = id;
+        document.getElementById('saveNoteBtn').innerText = "अप्डेट करें";
+        document.getElementById('cancelEditBtn').style.display = "inline-block";
       }
     }
 
-    function startSelectionMode(id, cardElement) {
+    function cancelEditNote() {
+      editingNoteId = null;
+      document.getElementById('noteInput').value = "";
+      document.getElementById('saveNoteBtn').innerText = "नोट सेव करें";
+      document.getElementById('cancelEditBtn').style.display = "none";
+    }
+
+    function deleteNote(id) {
+      if (!confirm("क्या आप यह नोट हटाना चाहते हैं?")) return;
+      let notes = getStoredNotes();
+      notes = notes.filter(n => n.id !== id);
+      saveLocalNotes(notes);
+    }
+
+    /* Gallery Functions - Max 10 Photos in Local Cache */
+    function loadCachedGallery(targetId) {
+      const cachedData = localStorage.getItem(`cache_gallery_${targetId}`);
+      if (cachedData) renderGallery(JSON.parse(cachedData));
+      else showSkeletonLoaders();
+    }
+
+    function showSkeletonLoaders() {
+      const container = document.getElementById('gallery');
+      container.innerHTML = "";
+      for (let i = 0; i < 6; i++) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'skeleton-card';
+        container.appendChild(skeleton);
+      }
+    }
+
+    function renderGallery(photos) {
+      const container = document.getElementById('gallery');
+      if (!photos || photos.length === 0) {
+        container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>कोई फोटो नहीं है।</p>";
+        return;
+      }
+
+      container.innerHTML = "";
+      photos.forEach((p) => {
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.dataset.url = p.url;
+
+        let holdTimer;
+        card.addEventListener('touchstart', () => { holdTimer = setTimeout(() => enableSelection(card, p.url), 800); });
+        card.addEventListener('touchend', () => clearTimeout(holdTimer));
+        card.addEventListener('mousedown', () => { holdTimer = setTimeout(() => enableSelection(card, p.url), 800); });
+        card.addEventListener('mouseup', () => clearTimeout(holdTimer));
+
+        card.onclick = () => {
+          if (isSelectionMode) togglePhotoSelect(card, p.url);
+          else openModal(p.url);
+        };
+
+        card.innerHTML = `<img src="${p.url}" loading="lazy">`;
+        container.appendChild(card);
+      });
+    }
+
+    function enableSelection(card, url) {
       isSelectionMode = true;
-      toggleSelectPhoto(id, cardElement);
+      togglePhotoSelect(card, url);
     }
 
-    function toggleSelectPhoto(id, cardElement) {
-      if (selectedPhotoIds.has(id)) {
-        selectedPhotoIds.delete(id);
-        cardElement.classList.remove('selected');
+    function togglePhotoSelect(card, url) {
+      if (selectedPhotos.includes(url)) {
+        selectedPhotos = selectedPhotos.filter(item => item !== url);
+        card.classList.remove('selected-card');
       } else {
-        selectedPhotoIds.add(id);
-        cardElement.classList.add('selected');
+        selectedPhotos.push(url);
+        card.classList.add('selected-card');
       }
 
-      if (selectedPhotoIds.size > 0) {
-        isSelectionMode = true;
-        document.getElementById('actionBar').style.display = 'flex';
-        document.getElementById('selectedCountText').innerText = `${selectedPhotoIds.size} selected`;
-      } else {
-        clearSelection();
-      }
+      if (selectedPhotos.length > 0) {
+        document.getElementById('deleteBar').style.display = 'flex';
+        document.getElementById('selectedCount').innerText = `${selectedPhotos.length} चुनी गई`;
+      } else cancelSelection();
     }
 
-    function clearSelection() {
-      selectedPhotoIds.clear();
+    function cancelSelection() {
       isSelectionMode = false;
-      document.getElementById('actionBar').style.display = 'none';
-      fetchGallery(DEVICE_ID());
+      selectedPhotos = [];
+      document.getElementById('deleteBar').style.display = 'none';
+      document.querySelectorAll('.selected-card').forEach(c => c.classList.remove('selected-card'));
     }
 
     async function deleteSelectedPhotos() {
-      if (selectedPhotoIds.size === 0) return;
-      if (!confirm(`क्या आप ${selectedPhotoIds.size} चुनी हुई फोटो को डिलीट करना चाहते हैं?`)) return;
+      if (!navigator.onLine) return showOfflinePopup();
+      if (!confirm("क्या आप चुनी हुई फोटो हटाना चाहते हैं?")) return;
+      alert("फोटो हटाई जा रही हैं...");
+      cancelSelection();
+      fetchGallery(DEVICE_ID());
+    }
 
-      const idsArray = Array.from(selectedPhotoIds);
-      document.querySelector('h2').innerText = "Deleting...";
+    async function fetchGallery(targetId) {
+      if (!navigator.onLine) return showOfflinePopup();
 
       try {
-        const res = await fetch(`${API_BASE}/delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ photo_ids: idsArray })
-        });
-        const data = await res.json();
-        if (data.success) {
-          clearSelection();
-          document.querySelector('h2').innerText = "Cloud Gallery";
-          fetchGallery(DEVICE_ID());
-        } else {
-          alert("Error: " + data.error);
-          document.querySelector('h2').innerText = "Cloud Gallery";
+        const res = await fetch(`${API_BASE}/gallery?device_id=${targetId}`);
+        if (!res.ok) throw new Error("Server Error");
+        
+        const photos = await res.json();
+        if (photos) {
+          // Limit cache to 10 photos only
+          localStorage.setItem(`cache_gallery_${targetId}`, JSON.stringify(photos.slice(0, 10)));
+          renderGallery(photos);
         }
       } catch (err) {
-        alert("Delete Failed!");
-        document.querySelector('h2').innerText = "Cloud Gallery";
+        showServerErrorPopup();
       }
     }
 
-    function triggerUpload() {
-      const pass = localStorage.getItem('device_password');
-      if (!pass) {
-        showAuthPopup(false);
-        return;
-      }
-      document.getElementById('hiddenFileInput').click();
+    /* Camera Functions */
+    async function openSnapCamera() {
+      try {
+        if(mediaStream) closeSnapCamera();
+        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: useFrontCamera ? "user" : "environment" } 
+        });
+        const video = document.getElementById('snapVideo');
+        video.srcObject = mediaStream;
+        document.getElementById('snapCameraModal').style.display = 'flex';
+      } catch (err) { alert("कैमरा लोड करने में समस्या हुई!"); }
     }
 
-    // क्रैश रोकने के लिए फाइलों को एक-एक करके (Queue में) अपलोड करने का फंक्शन
-    async function uploadImagesSequentially() {
-      const fileInput = document.getElementById('hiddenFileInput');
-      const files = fileInput.files;
-      if (!files || files.length === 0) return;
+    function toggleCameraFacing() {
+      useFrontCamera = !useFrontCamera;
+      openSnapCamera();
+    }
 
-      const totalFiles = files.length;
-      let successCount = 0;
+    function toggleTimer() {
+      timerEnabled = !timerEnabled;
+      document.getElementById('timerBtn').innerText = timerEnabled ? "⏱️ 3s" : "⏱️ Off";
+    }
 
-      for (let i = 0; i < totalFiles; i++) {
-        document.querySelector('h2').innerText = `Uploading ${i + 1}/${totalFiles}...`;
-        
+    function setSnapFilter(filterStyle) {
+      currentFilter = filterStyle;
+      document.getElementById('snapVideo').style.filter = filterStyle;
+    }
+
+    function startCaptureSequence() {
+      if (timerEnabled) {
+        let count = 3;
+        const timerEl = document.getElementById('timerCount');
+        timerEl.style.display = 'block';
+        timerEl.innerText = count;
+
+        const interval = setInterval(() => {
+          count--;
+          if (count > 0) timerEl.innerText = count;
+          else {
+            clearInterval(interval);
+            timerEl.style.display = 'none';
+            captureSnapPhoto();
+          }
+        }, 1000);
+      } else captureSnapPhoto();
+    }
+
+    function captureSnapPhoto() {
+      if (!navigator.onLine) return showOfflinePopup();
+
+      const video = document.getElementById('snapVideo');
+      const canvas = document.getElementById('snapCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      ctx.filter = currentFilter;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        closeSnapCamera();
         const formData = new FormData();
-        formData.append('file', files[i]);
+        formData.append('file', blob, 'camera_photo.jpg');
         formData.append('device_id', DEVICE_ID());
 
         try {
-          const res = await fetch(`${API_BASE}/upload`, {
-            method: 'POST',
-            body: formData
-          });
-          const data = await res.json();
-          if (data.success) {
-            successCount++;
-          }
-        } catch (err) {
-          console.error("Upload error for file index", i);
+          const res = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData });
+          if (!res.ok) throw new Error();
+          fetchGallery(DEVICE_ID());
+        } catch(e) {
+          showServerErrorPopup();
+        }
+      }, 'image/jpeg', 0.95);
+    }
+
+    function closeSnapCamera() {
+      if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+      document.getElementById('snapCameraModal').style.display = 'none';
+    }
+
+    function triggerUpload() { document.getElementById('hiddenFileInput').click(); }
+
+    async function uploadImagesSequentially(inputElement) {
+      if (!navigator.onLine) return showOfflinePopup();
+
+      const files = inputElement.files;
+      for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        formData.append('device_id', DEVICE_ID());
+        try {
+          const res = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData });
+          if (!res.ok) throw new Error();
+        } catch(e) {
+          showServerErrorPopup();
+          return;
         }
       }
-
-      fileInput.value = "";
-      document.querySelector('h2').innerText = "Cloud Gallery";
       fetchGallery(DEVICE_ID());
-      
-      if (successCount > 0) {
-        alert(`${successCount} फोटो सफलतापूर्वक अपलोड हो गई!`);
-      }
     }
 
-    function openModal(url, dateStr) {
+    function openModal(url) {
       document.getElementById('fullImg').src = url;
-      document.getElementById('modalDate').innerText = "Uploaded: " + dateStr;
       document.getElementById('imgModal').style.display = 'flex';
     }
-    function closeZoom() {
-      document.getElementById('imgModal').style.display = 'none';
-    }
+    function closeZoom() { document.getElementById('imgModal').style.display = 'none'; }
 
-    function showAuthPopup(login) {
-      isLoginMode = login;
-      const modal = document.getElementById('authModal');
-      const idInput = document.getElementById('authIdInput');
-      const passInput = document.getElementById('authPassInput');
-      const title = document.getElementById('authTitle');
-      const btn = document.getElementById('authBtn');
-      const switchText = document.getElementById('switchText');
-
-      modal.style.display = 'flex';
-      passInput.value = "";
-
-      if (isLoginMode) {
-        title.innerText = "पुराने अकाउंट में लॉगिन करें";
-        idInput.removeAttribute('readonly');
-        idInput.value = "";
-        idInput.placeholder = "अपनी 5-अंक की ID डालें";
-        btn.innerText = "Login करें";
-        switchText.innerHTML = "नया अकाउंट बनाना है? <span>यहाँ क्लिक करें</span>";
-      } else {
-        title.innerText = "सुरक्षा पासवर्ड बनाएं";
-        idInput.setAttribute('readonly', true);
-        idInput.value = localStorage.getItem('device_5digit_code') || '';
-        btn.innerText = "पासवर्ड सेट करें";
-        switchText.innerHTML = "पुराना अकाउंट है? <span>लॉगिन करें</span>";
-      }
-    }
-
-    function openLoginModal() {
-      showAuthPopup(true);
-    }
-
-    function toggleAuthMode() {
-      showAuthPopup(!isLoginMode);
-    }
+    function showAuthPopup() { document.getElementById('authModal').style.display = 'flex'; }
 
     async function submitAuth() {
       const idVal = document.getElementById('authIdInput').value.trim();
       const passVal = document.getElementById('authPassInput').value.trim();
-
-      if (!idVal || !passVal) {
-        alert("कृपया ID और पासवर्ड दोनों भरें!");
-        return;
-      }
-
-      const endpoint = isLoginMode ? `${API_BASE}/login` : `${API_BASE}/register`;
-
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ device_id: idVal, password: passVal })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          localStorage.setItem('device_5digit_code', idVal);
-          localStorage.setItem('device_password', passVal);
-          
-          document.getElementById('devCode').innerText = idVal;
-          document.getElementById('authModal').style.display = 'none';
-          updateHeaderButtons();
-          fetchGallery(idVal);
-          alert(isLoginMode ? "सफलतापूर्वक लॉगिन हो गया!" : "पासवर्ड सुरक्षित हो गया!");
-        } else {
-          alert(data.error || "गलत पासवर्ड या आईडी!");
-        }
-      } catch (err) {
-        alert("कनेक्शन एरर! कृपया दोबारा कोशिश करें।");
+      if (idVal && passVal) {
+        localStorage.setItem('device_5digit_code', idVal);
+        localStorage.setItem('device_password', passVal);
+        document.getElementById('authModal').style.display = 'none';
+        initUser();
       }
     }
 
     function logoutUser() {
-      if (confirm("क्या आप सचमुच लॉग-आउट करना चाहते हैं?")) {
-        localStorage.removeItem('device_password');
-        const newId = Math.floor(10000 + Math.random() * 90000).toString();
-        localStorage.setItem('device_5digit_code', newId);
-        
-        document.getElementById('devCode').innerText = newId;
-        updateHeaderButtons();
-        fetchGallery(newId);
-        alert("सफलतापूर्वक लॉग-आउट हो गए!");
-      }
+      localStorage.removeItem('device_password');
+      location.reload();
     }
 
     initUser();
