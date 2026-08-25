@@ -31,47 +31,34 @@
     .edit-note-btn { background: #f59e0b; color: #0f172a; }
     .del-note-btn { background: #ef4444; color: #fff; }
 
-    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px; min-height: 150px; }
     @media (max-width: 400px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
 
-    .gallery-card { background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; cursor: pointer; aspect-ratio: 1 / 1; position: relative; user-select: none; }
+    .gallery-card { background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; cursor: pointer; aspect-ratio: 1 / 1; position: relative; }
     .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
-    
-    .selected-card { border: 3px solid #ef4444; }
-    .selected-card::after { content: '✓'; position: absolute; top: 5px; right: 5px; background: #ef4444; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
 
-    .delete-floating-bar { display: none; position: fixed; bottom: 20px; background: #1e293b; border: 1px solid #ef4444; padding: 10px 20px; border-radius: 30px; z-index: 2500; gap: 15px; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-    .delete-btn-bar { background: #ef4444; color: #fff; border: none; padding: 8px 18px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-
+    /* Guaranteed Skeleton Loader Effect */
     .skeleton-card { background: #1e293b; border-radius: 8px; aspect-ratio: 1 / 1; position: relative; overflow: hidden; border: 1px solid #334155; }
-    .skeleton-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent); animation: shimmer 1.5s infinite; }
+    .skeleton-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent); animation: shimmer 1.2s infinite; }
     @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-    /* Pop-up Modals for Errors */
+    /* Alert Popups */
     .error-popup { display: none; position: fixed; z-index: 5000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
     .error-card { background: #1e293b; padding: 25px; border-radius: 14px; width: 90%; max-width: 350px; border: 1px solid #ef4444; text-align: center; }
     .error-card h3 { color: #ef4444; margin-top: 0; }
     .error-card p { color: #cbd5e1; font-size: 0.9rem; margin-bottom: 20px; }
     .error-card button { background: #38bdf8; color: #0f172a; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
+    /* Camera Popup Modal */
     .snap-camera-modal { display: none; position: fixed; z-index: 4000; top: 0; left: 0; width: 100%; height: 100%; background: #000; flex-direction: column; justify-content: space-between; align-items: center; padding: 15px 0; box-sizing: border-box; }
     .snap-top-bar { width: 100%; max-width: 450px; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; }
     .cam-opt-btn { background: rgba(255,255,255,0.2); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; }
     
     .snap-view-box { position: relative; width: 100%; max-width: 450px; height: 65vh; border-radius: 20px; overflow: hidden; background: #111; display: flex; justify-content: center; align-items: center; }
     #snapVideo { width: 100%; height: 100%; object-fit: cover; }
-    .timer-overlay { position: absolute; font-size: 5rem; color: #fffc00; font-weight: bold; display: none; z-index: 10; }
 
-    .snap-filters-tray { display: flex; gap: 12px; width: 90%; max-width: 400px; overflow-x: auto; padding: 5px; scrollbar-width: none; }
-    .snap-filter-icon { min-width: 65px; height: 65px; border-radius: 50%; border: 2px solid #fffc00; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; color: #fff; cursor: pointer; font-weight: bold; }
-    .snap-filter-icon.active { border: 3px solid #fff; transform: scale(1.05); }
-
-    .snap-shutter { width: 75px; height: 75px; border-radius: 50%; background: transparent; border: 5px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .snap-shutter-inner { width: 60px; height: 60px; border-radius: 50%; background: #fff; }
-
-    .modal { display: none; position: fixed; z-index: 2000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-    .modal img { max-width: 100%; max-height: 75vh; border-radius: 8px; }
-    .close-modal { position: absolute; top: 20px; right: 20px; background: #ef4444; color: #fff; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
+    .snap-shutter { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 5px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 10px; }
+    .snap-shutter-inner { width: 55px; height: 55px; border-radius: 50%; background: #fff; }
 
     .auth-overlay { display: none; position: fixed; z-index: 3000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
     .auth-box { background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 15px; }
@@ -88,12 +75,12 @@
 
   <div class="device-info">🔑 ID: <strong id="devCode">...</strong></div>
 
-  <!-- Note Input -->
+  <!-- Note Input Area -->
   <div class="note-box">
-    <textarea id="noteInput" rows="2" placeholder="कोई ज़रूरी टेक्स्ट/नोट लिखें..."></textarea>
+    <textarea id="noteInput" rows="2" placeholder="कोई भी नोट या टेक्स्ट लिखें..."></textarea>
     <div class="note-btn-group">
       <button class="cancel-edit-btn" id="cancelEditBtn" onclick="cancelEditNote()">रद्द करें</button>
-      <button class="save-note-btn" id="saveNoteBtn" onclick="saveTextNote()">नोट सेव करें</button>
+      <button class="save-note-btn" id="saveNoteBtn" onclick="saveTextNote()">सेव करें</button>
     </div>
   </div>
 
@@ -103,59 +90,39 @@
   
   <div class="gallery-grid" id="gallery"></div>
 
-  <!-- Floating Delete Bar -->
-  <div class="delete-floating-bar" id="deleteBar">
-    <span id="selectedCount">1 फोटो चुनी गई</span>
-    <button class="delete-btn-bar" onclick="deleteSelectedPhotos()">हटायें (Delete)</button>
-    <button style="background:transparent; color:#94a3b8; border:none;" onclick="cancelSelection()">रद्द करें</button>
-  </div>
-
-  <!-- Internet Error Popup -->
+  <!-- Offline Warning Modal -->
   <div class="error-popup" id="offlineModal">
     <div class="error-card">
-      <h3>⚠️ कोई इंटरनेट कनेक्शन नहीं</h3>
-      <p>कृपया अपना नेटवर्क कनेक्शन जांचें और दोबारा प्रयास करें।</p>
+      <h3>⚠️ इंटरनेट बंद है</h3>
+      <p>नेटवर्क कनेक्ट करें और पेज को रिफ्रेश करें।</p>
       <button onclick="window.location.reload()">🔄 Refresh</button>
     </div>
   </div>
 
-  <!-- Server Crash Popup -->
+  <!-- Server Failure Modal -->
   <div class="error-popup" id="serverErrorModal">
     <div class="error-card">
-      <h3>🛠️ सर्वर कनेक्ट नहीं हो सका</h3>
-      <p>सर्वर रिस्पॉन्स नहीं दे रहा है या क्रैश हो गया है।</p>
+      <h3>🛠️ सर्वर कनेक्ट नहीं हुआ</h3>
+      <p>Render सर्वर से रिस्पॉन्स नहीं मिल रहा है।</p>
       <button onclick="retryServerConnection()">🔁 Try Again</button>
     </div>
   </div>
 
-  <!-- Camera Modal -->
+  <!-- Snapchat/Camera Screen -->
   <div class="snap-camera-modal" id="snapCameraModal">
     <div class="snap-top-bar">
       <button class="cam-opt-btn" onclick="toggleCameraFacing()">🔄</button>
-      <button class="cam-opt-btn" id="timerBtn" onclick="toggleTimer()">⏱️ Off</button>
       <button class="cam-opt-btn" onclick="closeSnapCamera()">✕</button>
     </div>
 
     <div class="snap-view-box">
       <video id="snapVideo" autoplay playsinline></video>
-      <div class="timer-overlay" id="timerCount">3</div>
-    </div>
-    
-    <div class="snap-filters-tray">
-      <div class="snap-filter-icon active" onclick="setSnapFilter('none')">Normal</div>
-      <div class="snap-filter-icon" onclick="setSnapFilter('brightness(1.2) contrast(1.1) saturate(1.3)')">✨ Glow</div>
-      <div class="snap-filter-icon" onclick="setSnapFilter('sepia(0.4) contrast(1.2)')">📼 90s</div>
     </div>
 
-    <div class="snap-shutter" onclick="startCaptureSequence()"><div class="snap-shutter-inner"></div></div>
+    <div class="snap-shutter" onclick="captureSnapPhoto()"><div class="snap-shutter-inner"></div></div>
   </div>
 
   <canvas id="snapCanvas" style="display: none;"></canvas>
-
-  <div class="modal" id="imgModal">
-    <button class="close-modal" onclick="closeZoom()">×</button>
-    <img id="fullImg" src="">
-  </div>
 
   <div class="auth-overlay" id="authModal">
     <div class="auth-box">
@@ -170,15 +137,11 @@
     const API_BASE = "https://pdf-chaker-1.onrender.com/api";
     let mediaStream = null;
     let useFrontCamera = true;
-    let timerEnabled = false;
-    let selectedPhotos = [];
-    let isSelectionMode = false;
-    let currentFilter = 'none';
     let editingNoteId = null;
 
-    // Check Network on Load
-    window.addEventListener('offline', () => showOfflinePopup());
-    window.addEventListener('online', () => hideOfflinePopup());
+    // Check Network Immediately
+    window.addEventListener('offline', showOfflinePopup);
+    window.addEventListener('online', hideOfflinePopup);
 
     function showOfflinePopup() { document.getElementById('offlineModal').style.display = 'flex'; }
     function hideOfflinePopup() { document.getElementById('offlineModal').style.display = 'none'; }
@@ -193,19 +156,11 @@
     function updateHeaderButtons() {
       const container = document.getElementById('topBtnsContainer');
       const savedPass = localStorage.getItem('device_password');
-      if (savedPass) {
-        container.innerHTML = `
-          <button class="action-btn logout-btn" onclick="logoutUser()">Logout</button>
-          <button class="icon-btn" onclick="openSnapCamera()">📸</button>
-          <button class="icon-btn" onclick="triggerUpload()">+</button>
-        `;
-      } else {
-        container.innerHTML = `
-          <button class="action-btn" onclick="showAuthPopup()">Login</button>
-          <button class="icon-btn" onclick="openSnapCamera()">📸</button>
-          <button class="icon-btn" onclick="triggerUpload()">+</button>
-        `;
-      }
+      container.innerHTML = `
+        ${savedPass ? '<button class="action-btn logout-btn" onclick="logoutUser()">Logout</button>' : '<button class="action-btn" onclick="showAuthPopup()">Login</button>'}
+        <button class="icon-btn" onclick="openSnapCamera()">📸</button>
+        <button class="icon-btn" onclick="triggerUpload()">+</button>
+      `;
     }
 
     function initUser() {
@@ -219,33 +174,38 @@
       document.getElementById('devCode').innerText = devId;
       updateHeaderButtons();
       
-      loadLocalNotes();
-      loadCachedGallery(devId);
-      
-      if (localStorage.getItem('device_password')) {
-        fetchGallery(devId);
-      }
+      // Load 10 items from Local Cache First
+      loadLocalNotesCache();
+      loadLocalGalleryCache(devId);
+
+      // Fetch fresh data from Render Server
+      fetchGallery(devId);
     }
 
     const DEVICE_ID = () => localStorage.getItem('device_5digit_code');
 
-    /* Local Notes Handling - Max 10 Notes in Local Cache */
+    /* Fixed Local Cache Rules: Keep Max 10 Notes */
     function getStoredNotes() {
-      return JSON.parse(localStorage.getItem(`notes_${DEVICE_ID()}`) || '[]');
+      try {
+        return JSON.parse(localStorage.getItem(`notes_${DEVICE_ID()}`)) || [];
+      } catch (e) { return []; }
     }
 
-    function saveLocalNotes(notes) {
-      // Limit to initial 10 notes for local cache
-      const limitedNotes = notes.slice(0, 10);
-      localStorage.setItem(`notes_${DEVICE_ID()}`, JSON.stringify(limitedNotes));
+    function saveLocalNotesCache(notesArr) {
+      // Limit array strictly to first 10 items
+      const cacheSlice = notesArr.slice(0, 10);
+      localStorage.setItem(`notes_${DEVICE_ID()}`, JSON.stringify(cacheSlice));
+      renderNotes(notesArr);
+    }
+
+    function loadLocalNotesCache() {
+      const notes = getStoredNotes();
       renderNotes(notes);
     }
 
-    function renderNotes(notesToRender) {
-      const notes = notesToRender || getStoredNotes();
+    function renderNotes(notes) {
       const container = document.getElementById('notesList');
       container.innerHTML = "";
-
       notes.forEach((note) => {
         const card = document.createElement('div');
         card.className = 'note-card';
@@ -260,50 +220,49 @@
       });
     }
 
-    function loadLocalNotes() { renderNotes(); }
-
     async function saveTextNote() {
       if (!navigator.onLine) return showOfflinePopup();
 
       const textInput = document.getElementById('noteInput');
       const text = textInput.value.trim();
-      if (!text) return alert("कृपया कुछ टेक्स्ट लिखें!");
+      if (!text) return alert("कृपया टेक्स्ट भरें!");
 
       let notes = getStoredNotes();
 
       if (editingNoteId) {
         notes = notes.map(n => n.id === editingNoteId ? { ...n, text: text } : n);
         editingNoteId = null;
-        document.getElementById('saveNoteBtn').innerText = "नोट सेव करें";
+        document.getElementById('saveNoteBtn').innerText = "सेव करें";
         document.getElementById('cancelEditBtn').style.display = "none";
       } else {
         const newNote = { id: Date.now().toString(), text: text };
         notes.unshift(newNote);
 
+        // Upload Note to Server
         const formData = new FormData();
         formData.append('text_note', text);
         formData.append('device_id', DEVICE_ID());
 
-        try { 
+        try {
           const res = await fetch(`${API_BASE}/upload-note`, { method: 'POST', body: formData });
-          if (!res.ok) throw new Error();
+          if (!res.ok) throw new Error("Upload failed");
         } catch (e) {
           showServerErrorPopup();
           return;
         }
       }
 
-      saveLocalNotes(notes);
+      saveLocalNotesCache(notes);
       textInput.value = "";
     }
 
     function editNote(id) {
       const notes = getStoredNotes();
-      const noteToEdit = notes.find(n => n.id === id);
-      if (noteToEdit) {
-        document.getElementById('noteInput').value = noteToEdit.text;
+      const item = notes.find(n => n.id === id);
+      if (item) {
+        document.getElementById('noteInput').value = item.text;
         editingNoteId = id;
-        document.getElementById('saveNoteBtn').innerText = "अप्डेट करें";
+        document.getElementById('saveNoteBtn').innerText = "अपडेट करें";
         document.getElementById('cancelEditBtn').style.display = "inline-block";
       }
     }
@@ -311,24 +270,18 @@
     function cancelEditNote() {
       editingNoteId = null;
       document.getElementById('noteInput').value = "";
-      document.getElementById('saveNoteBtn').innerText = "नोट सेव करें";
+      document.getElementById('saveNoteBtn').innerText = "सेव करें";
       document.getElementById('cancelEditBtn').style.display = "none";
     }
 
     function deleteNote(id) {
-      if (!confirm("क्या आप यह नोट हटाना चाहते हैं?")) return;
+      if (!confirm("इसे हटाना चाहते हैं?")) return;
       let notes = getStoredNotes();
       notes = notes.filter(n => n.id !== id);
-      saveLocalNotes(notes);
+      saveLocalNotesCache(notes);
     }
 
-    /* Gallery Functions - Max 10 Photos in Local Cache */
-    function loadCachedGallery(targetId) {
-      const cachedData = localStorage.getItem(`cache_gallery_${targetId}`);
-      if (cachedData) renderGallery(JSON.parse(cachedData));
-      else showSkeletonLoaders();
-    }
-
+    /* Guaranteed Skeleton Loader */
     function showSkeletonLoaders() {
       const container = document.getElementById('gallery');
       container.innerHTML = "";
@@ -339,10 +292,22 @@
       }
     }
 
+    /* Fixed Local Cache Rules: Keep Max 10 Photos */
+    function loadLocalGalleryCache(targetId) {
+      showSkeletonLoaders(); // Force Skeleton display immediately
+      try {
+        const cached = localStorage.getItem(`cache_gallery_${targetId}`);
+        if (cached) {
+          const photos = JSON.parse(cached);
+          if (photos.length > 0) renderGallery(photos);
+        }
+      } catch (e) {}
+    }
+
     function renderGallery(photos) {
       const container = document.getElementById('gallery');
       if (!photos || photos.length === 0) {
-        container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>कोई फोटो नहीं है।</p>";
+        container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:#94a3b8;'>कोई फोटो उपलब्ध नहीं है।</p>";
         return;
       }
 
@@ -350,57 +315,9 @@
       photos.forEach((p) => {
         const card = document.createElement('div');
         card.className = 'gallery-card';
-        card.dataset.url = p.url;
-
-        let holdTimer;
-        card.addEventListener('touchstart', () => { holdTimer = setTimeout(() => enableSelection(card, p.url), 800); });
-        card.addEventListener('touchend', () => clearTimeout(holdTimer));
-        card.addEventListener('mousedown', () => { holdTimer = setTimeout(() => enableSelection(card, p.url), 800); });
-        card.addEventListener('mouseup', () => clearTimeout(holdTimer));
-
-        card.onclick = () => {
-          if (isSelectionMode) togglePhotoSelect(card, p.url);
-          else openModal(p.url);
-        };
-
-        card.innerHTML = `<img src="${p.url}" loading="lazy">`;
+        card.innerHTML = `<img src="${p.url || p}" loading="lazy">`;
         container.appendChild(card);
       });
-    }
-
-    function enableSelection(card, url) {
-      isSelectionMode = true;
-      togglePhotoSelect(card, url);
-    }
-
-    function togglePhotoSelect(card, url) {
-      if (selectedPhotos.includes(url)) {
-        selectedPhotos = selectedPhotos.filter(item => item !== url);
-        card.classList.remove('selected-card');
-      } else {
-        selectedPhotos.push(url);
-        card.classList.add('selected-card');
-      }
-
-      if (selectedPhotos.length > 0) {
-        document.getElementById('deleteBar').style.display = 'flex';
-        document.getElementById('selectedCount').innerText = `${selectedPhotos.length} चुनी गई`;
-      } else cancelSelection();
-    }
-
-    function cancelSelection() {
-      isSelectionMode = false;
-      selectedPhotos = [];
-      document.getElementById('deleteBar').style.display = 'none';
-      document.querySelectorAll('.selected-card').forEach(c => c.classList.remove('selected-card'));
-    }
-
-    async function deleteSelectedPhotos() {
-      if (!navigator.onLine) return showOfflinePopup();
-      if (!confirm("क्या आप चुनी हुई फोटो हटाना चाहते हैं?")) return;
-      alert("फोटो हटाई जा रही हैं...");
-      cancelSelection();
-      fetchGallery(DEVICE_ID());
     }
 
     async function fetchGallery(targetId) {
@@ -408,11 +325,11 @@
 
       try {
         const res = await fetch(`${API_BASE}/gallery?device_id=${targetId}`);
-        if (!res.ok) throw new Error("Server Error");
+        if (!res.ok) throw new Error("Server response error");
         
         const photos = await res.json();
-        if (photos) {
-          // Limit cache to 10 photos only
+        if (Array.isArray(photos)) {
+          // Keep only first 10 photos in Local Storage
           localStorage.setItem(`cache_gallery_${targetId}`, JSON.stringify(photos.slice(0, 10)));
           renderGallery(photos);
         }
@@ -421,51 +338,30 @@
       }
     }
 
-    /* Camera Functions */
+    /* Direct Camera Function with Error Handlers */
     async function openSnapCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("आपका ब्राउज़र कैमरा एक्सेस की अनुमति नहीं दे रहा है!");
+        return;
+      }
+
       try {
-        if(mediaStream) closeSnapCamera();
-        mediaStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: useFrontCamera ? "user" : "environment" } 
+        if (mediaStream) closeSnapCamera();
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: useFrontCamera ? "user" : "environment" },
+          audio: false
         });
         const video = document.getElementById('snapVideo');
         video.srcObject = mediaStream;
         document.getElementById('snapCameraModal').style.display = 'flex';
-      } catch (err) { alert("कैमरा लोड करने में समस्या हुई!"); }
+      } catch (err) {
+        alert("कैमरा चालू करने में असमर्थ। कृपया फोन की सेटिंग्स से कैमरा परमिशन (Permission) चालू करें।");
+      }
     }
 
     function toggleCameraFacing() {
       useFrontCamera = !useFrontCamera;
       openSnapCamera();
-    }
-
-    function toggleTimer() {
-      timerEnabled = !timerEnabled;
-      document.getElementById('timerBtn').innerText = timerEnabled ? "⏱️ 3s" : "⏱️ Off";
-    }
-
-    function setSnapFilter(filterStyle) {
-      currentFilter = filterStyle;
-      document.getElementById('snapVideo').style.filter = filterStyle;
-    }
-
-    function startCaptureSequence() {
-      if (timerEnabled) {
-        let count = 3;
-        const timerEl = document.getElementById('timerCount');
-        timerEl.style.display = 'block';
-        timerEl.innerText = count;
-
-        const interval = setInterval(() => {
-          count--;
-          if (count > 0) timerEl.innerText = count;
-          else {
-            clearInterval(interval);
-            timerEl.style.display = 'none';
-            captureSnapPhoto();
-          }
-        }, 1000);
-      } else captureSnapPhoto();
     }
 
     function captureSnapPhoto() {
@@ -474,10 +370,9 @@
       const video = document.getElementById('snapVideo');
       const canvas = document.getElementById('snapCanvas');
       const ctx = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
 
-      ctx.filter = currentFilter;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(async (blob) => {
@@ -493,11 +388,14 @@
         } catch(e) {
           showServerErrorPopup();
         }
-      }, 'image/jpeg', 0.95);
+      }, 'image/jpeg', 0.9);
     }
 
     function closeSnapCamera() {
-      if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
       document.getElementById('snapCameraModal').style.display = 'none';
     }
 
@@ -522,15 +420,9 @@
       fetchGallery(DEVICE_ID());
     }
 
-    function openModal(url) {
-      document.getElementById('fullImg').src = url;
-      document.getElementById('imgModal').style.display = 'flex';
-    }
-    function closeZoom() { document.getElementById('imgModal').style.display = 'none'; }
-
     function showAuthPopup() { document.getElementById('authModal').style.display = 'flex'; }
 
-    async function submitAuth() {
+    function submitAuth() {
       const idVal = document.getElementById('authIdInput').value.trim();
       const passVal = document.getElementById('authPassInput').value.trim();
       if (idVal && passVal) {
@@ -546,6 +438,7 @@
       location.reload();
     }
 
+    // Start App
     initUser();
   </script>
 </body>
