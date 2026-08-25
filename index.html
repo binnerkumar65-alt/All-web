@@ -1,379 +1,520 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Private Cloud Dashboard</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        body { background-color: #121212; color: #fff; padding: 20px; }
-        .container { max-width: 800px; margin: auto; }
-        h2 { margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; color: #00bcd4; margin-top: 25px; }
-        
-        /* Fixed Action Bar for Deleting Photos */
-        #delete-action-bar {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            background: #1f1f1f;
-            padding: 15px;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        .btn { padding: 10px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-danger { background: #e53935; color: white; }
-        .btn-cancel { background: #555; color: white; }
-        .btn-primary { background: #00bcd4; color: white; }
-        .btn-sm { padding: 5px 10px; font-size: 12px; margin-left: 5px; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Private Cloud App</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding-bottom: 70px; }
+    
+    .header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    h2 { color: #38bdf8; margin: 0; font-size: 1.4rem; }
+    
+    .top-btns { display: flex; gap: 8px; align-items: center; }
+    .icon-btn { background: #38bdf8; color: #0f172a; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(56,189,248,0.3); }
+    .action-btn { background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 0 10px; height: 36px; border-radius: 18px; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; }
+    .logout-btn { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
 
-        /* Photo Upload Section */
-        .upload-section { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .upload-form { display: flex; gap: 10px; align-items: center; }
-        input[type="file"] { background: #222; padding: 8px; border-radius: 4px; color: #fff; flex: 1; border: 1px solid #333; }
+    .device-info { background: #1e293b; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 20px; color: #38bdf8; border: 1px solid #334155; display: inline-block; }
+    
+    .view-section { width: 100%; max-width: 500px; display: none; }
+    .view-section.active { display: block; }
 
-        /* Gallery Grid */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 30px; }
-        .photo-card { position: relative; width: 100%; height: 120px; border-radius: 8px; overflow: hidden; border: 3px solid transparent; cursor: pointer; user-select: none; }
-        .photo-card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-        .photo-card.selected { border-color: #e53935; transform: scale(0.95); }
+    /* గैलरी स्टाइल */
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+    @media (max-width: 400px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
 
-        /* Full View Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        .modal img { max-width: 90%; max-height: 80%; border-radius: 8px; }
-        .modal-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 30px; cursor: pointer; }
+    .gallery-card { background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; cursor: pointer; aspect-ratio: 1 / 1; position: relative; user-select: none; }
+    .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-date { position: absolute; bottom: 0; background: rgba(15, 23, 42, 0.8); width: 100%; font-size: 0.65rem; color: #cbd5e1; text-align: center; padding: 3px 0; }
+    
+    .gallery-card.selected { border: 3px solid #38bdf8; transform: scale(0.96); }
+    .gallery-card.selected::after { content: '✔'; position: absolute; top: 6px; right: 6px; background: #38bdf8; color: #0f172a; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; }
 
-        /* Notes Section */
-        .note-input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        textarea { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #222; color: #fff; resize: vertical; min-height: 50px; }
-        .notes-list { display: flex; flex-direction: column; gap: 10px; }
-        .note-card { background: #1e1e1e; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #00bcd4; }
-        .note-text { flex: 1; white-space: pre-wrap; word-break: break-word; font-size: 14px; }
-        .note-actions { display: flex; gap: 5px; }
-    </style>
+    /* नोट्स स्टाइल */
+    .notes-box { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    textarea { width: 100%; height: 100px; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 1rem; resize: vertical; }
+    .save-note-btn { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; }
+    .note-card { background: #1e293b; border: 1px solid #334155; padding: 12px; border-radius: 8px; margin-bottom: 10px; word-break: break-word; font-size: 0.9rem; line-height: 1.4; color: #e2e8f0; }
+
+    /* एक्शन बार */
+    .action-bar { display: none; position: fixed; bottom: 15px; background: #1e293b; border: 1px solid #334155; padding: 10px 20px; border-radius: 30px; z-index: 1500; gap: 15px; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .delete-btn-bar { background: #ef4444; color: #fff; border: none; padding: 8px 16px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+    .cancel-select-btn { background: transparent; color: #94a3b8; border: none; cursor: pointer; font-size: 0.9rem; }
+
+    /* मोडल */
+    .modal { display: none; position: fixed; z-index: 2000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); justify-content: center; align-items: center; flex-direction: column; padding: 20px; box-sizing: border-box; }
+    .modal img { max-width: 100%; max-height: 75vh; border-radius: 8px; object-fit: contain; }
+    .modal-date { margin-top: 12px; color: #38bdf8; font-size: 0.85rem; }
+    .close-modal { position: absolute; top: 20px; right: 20px; background: #ef4444; color: #fff; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
+
+    .auth-overlay { display: none; position: fixed; z-index: 3000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
+    .auth-box { background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 15px; }
+    .auth-box h3 { margin: 0; color: #38bdf8; text-align: center; }
+    .auth-box input { padding: 10px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 1rem; }
+    .auth-box button { padding: 10px; background: #38bdf8; color: #0f172a; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
+    .auth-box .switch-mode { font-size: 0.8rem; text-align: center; color: #94a3b8; cursor: pointer; }
+    .auth-box .switch-mode span { color: #38bdf8; text-decoration: underline; }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- Delete Action Bar (Photo Select Mode) -->
-    <div id="delete-action-bar">
-        <span id="selected-count">0 फोटो चुनी गईं</span>
-        <div>
-            <button class="btn btn-danger" onclick="deleteSelectedPhotos()">🗑️ डिलीट करें</button>
-            <button class="btn btn-cancel" onclick="cancelSelection()">❌ Cancel</button>
-        </div>
+  <div class="header">
+    <h2 id="pageTitle">Cloud Gallery</h2>
+    <div class="top-btns" id="topBtnsContainer"></div>
+  </div>
+
+  <div class="device-info">🔑 ID: <strong id="devCode">...</strong></div>
+
+  <input type="file" id="hiddenFileInput" accept="image/*" multiple style="display: none;" onchange="uploadImagesSequentially()">
+  
+  <!-- गैलरी सेक्शन -->
+  <div class="view-section active" id="gallerySection">
+    <div class="gallery-grid" id="gallery">तस्वीरें लोड हो रही हैं...</div>
+  </div>
+
+  <!-- नोट्स सेक्शन -->
+  <div class="view-section" id="notesSection">
+    <div class="notes-box">
+      <textarea id="noteInput" placeholder="यहाँ नया नोट लिखें..."></textarea>
+      <button class="save-note-btn" onclick="saveNote()">नोट्स सेव करें</button>
     </div>
+    <div id="notesList">नोट्स लोड हो रहे हैं...</div>
+  </div>
 
-    <!-- 1. Photo Upload Form -->
-    <h2>📤 फोटो अपलोड करें</h2>
-    <div class="upload-section">
-        <form id="upload-form" class="upload-form" onsubmit="uploadPhoto(event)">
-            <input type="file" id="photo-file" accept="image/*" required>
-            <button type="submit" class="btn btn-primary" id="upload-btn">अपलोड करें</button>
-        </form>
+  <!-- डिलीट floating एक्शन बार -->
+  <div class="action-bar" id="actionBar">
+    <span id="selectedCountText" style="font-size: 0.9rem; color: #38bdf8; font-weight: bold;">0 selected</span>
+    <button class="delete-btn-bar" onclick="deleteSelectedPhotos()">Delete</button>
+    <button class="cancel-select-btn" onclick="clearSelection()">Cancel</button>
+  </div>
+
+  <!-- ज़ूम मोडल -->
+  <div class="modal" id="imgModal">
+    <button class="close-modal" onclick="closeZoom()">×</button>
+    <img id="fullImg" src="">
+    <div class="modal-date" id="modalDate"></div>
+  </div>
+
+  <!-- पासवर्ड/अकाउंट मोडल -->
+  <div class="auth-overlay" id="authModal">
+    <div class="auth-box">
+      <h3 id="authTitle">अकाउंट सेट करें</h3>
+      <input type="text" id="authIdInput" placeholder="5-अंक की ID">
+      <input type="password" id="authPassInput" placeholder="पासवर्ड दर्ज करें">
+      <button id="authBtn" onclick="submitAuth()">आगे बढ़ें</button>
+      <div class="switch-mode" id="switchText" onclick="toggleAuthMode()">पुराना अकाउंट है? <span>लॉगिन करें</span></div>
     </div>
+  </div>
 
-    <!-- 2. Gallery Section -->
-    <h2>📸 आपकी गैलरी</h2>
-    <div class="gallery-grid" id="gallery-container">
-        <!-- Photos here -->
-    </div>
+  <script>
+    const API_BASE = "https://pdf-chaker-1.onrender.com/api";
+    let isLoginMode = false;
+    let selectedPhotoIds = new Set();
+    let isSelectionMode = false;
+    let currentTab = 'gallery'; // 'gallery' या 'notes'
 
-    <!-- Full Photo Viewer Modal -->
-    <div id="photo-modal" class="modal" onclick="closePhotoModal()">
-        <span class="modal-close">&times;</span>
-        <img id="modal-img" src="" alt="Full View">
-    </div>
+    function toggleView(tab) {
+      currentTab = tab;
+      const gallerySec = document.getElementById('gallerySection');
+      const notesSec = document.getElementById('notesSection');
+      const title = document.getElementById('pageTitle');
+      const uploadBtn = document.getElementById('uploadBtn');
 
-    <!-- 3. Notes Section -->
-    <h2>📝 आपके नोट्स</h2>
-    <div class="note-input-group">
-        <textarea id="new-note-input" placeholder="नया नोट लिखें..."></textarea>
-        <button class="btn btn-primary" onclick="saveNote()">सेव करें</button>
-    </div>
-    <div class="notes-list" id="notes-container">
-        <!-- Notes here -->
-    </div>
-</div>
-
-<script>
-const API_BASE = "https://pdf-chaker-1.onrender.com/api";
-let currentDeviceId = localStorage.getItem("device_id") || "DEMO_DEVICE";
-
-let selectedPhotos = [];
-let isSelectionMode = false;
-let longPressTimer = null;
-let isLongPressTriggered = false;
-
-window.onload = () => {
-    loadGallery();
-    fetchNotes();
-};
-
-// ==========================================
-// 1. PHOTO UPLOADER & GALLERY (LONG PRESS FIX)
-// ==========================================
-async function uploadPhoto(e) {
-    e.preventDefault();
-    const fileInput = document.getElementById("photo-file");
-    const uploadBtn = document.getElementById("upload-btn");
-    
-    if (!fileInput.files[0]) return alert("कृपया फोटो चुनें!");
-
-    const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
-    formData.append("device_id", currentDeviceId);
-
-    try {
-        uploadBtn.disabled = true;
-        uploadBtn.innerText = "अपलोड हो रहा है...";
-        
-        const res = await fetch(`${API_BASE}/upload`, {
-            method: "POST",
-            body: formData
-        });
-        const data = await res.json();
-        
-        if (data.success) {
-            alert("फोटो अपलोड हो गई!");
-            fileInput.value = "";
-            loadGallery();
-        } else {
-            alert("अपलोड एरर: " + (data.error || ""));
-        }
-    } catch (err) {
-        alert("अपलोड में एरर आया!");
-    } finally {
-        uploadBtn.disabled = false;
-        uploadBtn.innerText = "अपलोड करें";
+      if (tab === 'notes') {
+        gallerySec.classList.remove('active');
+        notesSec.classList.add('active');
+        title.innerText = "Cloud Notes";
+        if(uploadBtn) uploadBtn.style.display = 'none';
+        fetchNotes(DEVICE_ID());
+      } else {
+        notesSec.classList.remove('active');
+        gallerySec.classList.add('active');
+        title.innerText = "Cloud Gallery";
+        if(uploadBtn) uploadBtn.style.display = 'flex';
+        fetchGallery(DEVICE_ID());
+      }
+      updateHeaderButtons();
     }
-}
 
-async function loadGallery() {
-    try {
-        const res = await fetch(`${API_BASE}/gallery?device_id=${currentDeviceId}`);
+    function updateHeaderButtons() {
+      const container = document.getElementById('topBtnsContainer');
+      const savedPass = localStorage.getItem('device_password');
+
+      let viewToggleBtn = currentTab === 'gallery' 
+        ? `<button class="action-btn" onclick="toggleView('notes')">📝 Notes</button>`
+        : `<button class="action-btn" onclick="toggleView('gallery')">🖼️ Gallery</button>`;
+
+      if (savedPass) {
+        container.innerHTML = `
+          ${viewToggleBtn}
+          <button class="action-btn logout-btn" onclick="logoutUser()">Logout</button>
+          <button class="icon-btn" id="uploadBtn" onclick="triggerUpload()" title="Upload Photo" style="${currentTab==='notes'?'display:none;':''}">+</button>
+        `;
+      } else {
+        container.innerHTML = `
+          ${viewToggleBtn}
+          <button class="action-btn" onclick="openLoginModal()">Login</button>
+          <button class="icon-btn" id="uploadBtn" onclick="triggerUpload()" title="Upload Photo" style="${currentTab==='notes'?'display:none;':''}">+</button>
+        `;
+      }
+    }
+
+    function initUser() {
+      let devId = localStorage.getItem('device_5digit_code');
+      let pass = localStorage.getItem('device_password');
+
+      if (!devId) {
+        devId = Math.floor(10000 + Math.random() * 90000).toString();
+        localStorage.setItem('device_5digit_code', devId);
+      }
+
+      document.getElementById('devCode').innerText = devId;
+      updateHeaderButtons();
+
+      if (!pass) {
+        showAuthPopup(false);
+      } else {
+        fetchGallery(devId);
+      }
+    }
+
+    const DEVICE_ID = () => localStorage.getItem('device_5digit_code');
+
+    /* === 1. गैलरी लॉजिक + स्थानीय 10 फोटो कैश === */
+    function renderPhotos(photos) {
+      const container = document.getElementById('gallery');
+      if (!photos || photos.length === 0) {
+        container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8; margin-top:30px;'>कोई फोटो मौजूद नहीं है।</p>";
+        return;
+      }
+
+      container.innerHTML = "";
+      photos.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        if (selectedPhotoIds.has(p.id)) {
+          card.classList.add('selected');
+        }
+        
+        const dateObj = new Date(p.date);
+        const formattedDate = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        card.onclick = () => {
+          if (isSelectionMode) {
+            toggleSelectPhoto(p.id, card);
+          } else {
+            openModal(p.url, formattedDate);
+          }
+        };
+
+        card.oncontextmenu = (e) => {
+          e.preventDefault();
+          startSelectionMode(p.id, card);
+        };
+
+        let pressTimer;
+        card.ontouchstart = () => {
+          pressTimer = setTimeout(() => {
+            startSelectionMode(p.id, card);
+          }, 600);
+        };
+        card.ontouchend = () => clearTimeout(pressTimer);
+        card.ontouchmove = () => clearTimeout(pressTimer);
+        
+        card.innerHTML = `
+          <img src="${p.url}" loading="lazy">
+          <div class="photo-date">${formattedDate}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function fetchGallery(targetId) {
+      // 10 फोटो लोकल कैश से दिखाएं
+      const cachedPhotos = localStorage.getItem(`cached_photos_${targetId}`);
+      if (cachedPhotos) {
+        renderPhotos(JSON.parse(cachedPhotos));
+      }
+
+      // सर्वर से ताज़ा फोटो लाएं
+      try {
+        const res = await fetch(`${API_BASE}/gallery?device_id=${targetId}`);
         const photos = await res.json();
-        const container = document.getElementById("gallery-container");
-        container.innerHTML = "";
-
-        photos.forEach(photo => {
-            const card = document.createElement("div");
-            card.className = "photo-card";
-            card.dataset.id = photo.id;
-            card.innerHTML = `<img src="${photo.url}" alt="Photo">`;
-            
-            setupPhotoHoldEvents(card, photo);
-            container.appendChild(card);
-        });
-    } catch (err) {
-        console.error("Gallery Error:", err);
+        
+        if (Array.isArray(photos)) {
+          // शुरुआती 10 फोटो को कैश में अपडेट करें
+          const top10 = photos.slice(0, 10);
+          localStorage.setItem(`cached_photos_${targetId}`, JSON.stringify(top10));
+          
+          renderPhotos(photos);
+        }
+      } catch (err) {
+        console.error("Gallery fetch failed:", err);
+      }
     }
-}
 
-function setupPhotoHoldEvents(element, photo) {
-    const startHold = (e) => {
-        isLongPressTriggered = false;
-        longPressTimer = setTimeout(() => {
-            isLongPressTriggered = true;
-            enableSelectionMode();
-            togglePhotoSelect(element, photo.id);
-        }, 500); // 500ms दबाकर रखने पर सेलेक्शन चालू होगा
-    };
-
-    const clearHold = () => {
-        if (longPressTimer) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
-    };
-
-    // Touch and Mouse events for Hold
-    element.addEventListener("touchstart", startHold, { passive: true });
-    element.addEventListener("mousedown", startHold);
-
-    element.addEventListener("touchend", clearHold);
-    element.addEventListener("mouseup", clearHold);
-    element.addEventListener("touchmove", clearHold, { passive: true });
-
-    // Click behavior
-    element.addEventListener("click", (e) => {
-        if (isLongPressTriggered) {
-            isLongPressTriggered = false;
-            return;
-        }
-
-        if (isSelectionMode) {
-            togglePhotoSelect(element, photo.id);
-        } else {
-            openPhotoModal(photo.url);
-        }
-    });
-}
-
-function enableSelectionMode() {
-    isSelectionMode = true;
-    document.getElementById("delete-action-bar").style.display = "flex";
-}
-
-// जब तक Cancel पर क्लिक न करें, मोड चालू रहेगा
-function cancelSelection() {
-    isSelectionMode = false;
-    selectedPhotos = [];
-    document.querySelectorAll(".photo-card.selected").forEach(el => el.classList.remove("selected"));
-    document.getElementById("delete-action-bar").style.display = "none";
-}
-
-function togglePhotoSelect(element, photoId) {
-    const index = selectedPhotos.indexOf(photoId);
-    if (index > -1) {
-        selectedPhotos.splice(index, 1);
-        element.classList.remove("selected");
-    } else {
-        selectedPhotos.push(photoId);
-        element.classList.add("selected");
-    }
-    
-    document.getElementById("selected-count").innerText = `${selectedPhotos.length} फोटो चुनी गईं`;
-}
-
-async function deleteSelectedPhotos() {
-    if (selectedPhotos.length === 0) return alert("कोई फोटो सेलेक्ट नहीं है!");
-    if (!confirm("क्या आप चुनी हुई फोटो डिलीट करना चाहते हैं?")) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/delete`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ photo_ids: selectedPhotos })
-        });
-        const data = await res.json();
-        if (data.success) {
-            cancelSelection();
-            loadGallery();
-        }
-    } catch (err) {
-        alert("Delete करने में एरर आया!");
-    }
-}
-
-function openPhotoModal(url) {
-    document.getElementById("modal-img").src = url;
-    document.getElementById("photo-modal").style.display = "flex";
-}
-
-function closePhotoModal() {
-    document.getElementById("photo-modal").style.display = "none";
-}
-
-
-// ==========================================
-// 2. NOTES SYSTEM (Edit & Delete)
-// ==========================================
-async function fetchNotes() {
-    try {
-        const res = await fetch(`${API_BASE}/notes?device_id=${currentDeviceId}`);
+    /* === 2. नोट्स लॉजिक (Server Sync) === */
+    async function fetchNotes(targetId) {
+      const list = document.getElementById('notesList');
+      try {
+        const res = await fetch(`${API_BASE}/notes?device_id=${targetId}`);
         const notes = await res.json();
-        const container = document.getElementById("notes-container");
-        container.innerHTML = "";
+        
+        list.innerHTML = "";
+        if (!notes || notes.length === 0) {
+          list.innerHTML = "<p style='text-align:center; color:#94a3b8; margin-top:20px;'>कोई नोट मौजूद नहीं है।</p>";
+          return;
+        }
 
-        notes.forEach(note => {
-            const card = document.createElement("div");
-            card.className = "note-card";
-            const safeText = note.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            
-            card.innerHTML = `
-                <div class="note-text">${escapeHtml(note.text)}</div>
-                <div class="note-actions">
-                    <button class="btn btn-primary btn-sm" onclick="editNote(${note.id}, '${safeText}')">✏️ Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteNote(${note.id})">🗑️ Delete</button>
-                </div>
-            `;
-            container.appendChild(card);
+        notes.forEach(n => {
+          const card = document.createElement('div');
+          card.className = 'note-card';
+          card.innerText = n.text;
+          list.appendChild(card);
         });
-    } catch (err) {
-        console.error("Notes Error:", err);
+      } catch (err) {
+        list.innerHTML = "<p style='text-align:center; color:#ef4444;'>नोट्स लोड नहीं हो पाए।</p>";
+      }
     }
-}
 
-async function saveNote() {
-    const input = document.getElementById("new-note-input");
-    const text = input.value.trim();
-    if (!text) return alert("कृपया कुछ लिखें!");
+    async function saveNote() {
+      const input = document.getElementById('noteInput');
+      const text = input.value.trim();
+      const pass = localStorage.getItem('device_password');
 
-    try {
+      if (!pass) {
+        showAuthPopup(false);
+        return;
+      }
+      if (!text) {
+        alert("कृपया कुछ टेक्स्ट लिखें!");
+        return;
+      }
+
+      try {
         const res = await fetch(`${API_BASE}/notes/add`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ device_id: currentDeviceId, text: text })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_id: DEVICE_ID(), text: text })
         });
         const data = await res.json();
         if (data.success) {
-            input.value = "";
-            fetchNotes();
+          input.value = "";
+          fetchNotes(DEVICE_ID());
         } else {
-            alert("नोट सेव नहीं हो सका!");
+          alert("नोट सेव करने में विफल: " + (data.error || ""));
         }
-    } catch (err) {
-        alert("सर्वर एरर!");
+      } catch (err) {
+        alert("सर्वर एरर! नोट सेव नहीं हो सका।");
+      }
     }
-}
 
-async function deleteNote(msgId) {
-    if (!confirm("क्या आप यह नोट डिलीट करना चाहते हैं?")) return;
+    /* === फोटो सिलेक्शन और डिलीट === */
+    function startSelectionMode(id, cardElement) {
+      isSelectionMode = true;
+      toggleSelectPhoto(id, cardElement);
+    }
 
-    try {
+    function toggleSelectPhoto(id, cardElement) {
+      if (selectedPhotoIds.has(id)) {
+        selectedPhotoIds.delete(id);
+        cardElement.classList.remove('selected');
+      } else {
+        selectedPhotoIds.add(id);
+        cardElement.classList.add('selected');
+      }
+
+      if (selectedPhotoIds.size > 0) {
+        isSelectionMode = true;
+        document.getElementById('actionBar').style.display = 'flex';
+        document.getElementById('selectedCountText').innerText = `${selectedPhotoIds.size} selected`;
+      } else {
+        clearSelection();
+      }
+    }
+
+    function clearSelection() {
+      selectedPhotoIds.clear();
+      isSelectionMode = false;
+      document.getElementById('actionBar').style.display = 'none';
+      fetchGallery(DEVICE_ID());
+    }
+
+    async function deleteSelectedPhotos() {
+      if (selectedPhotoIds.size === 0) return;
+      if (!confirm(`क्या आप ${selectedPhotoIds.size} चुनी हुई फोटो को डिलीट करना चाहते हैं?`)) return;
+
+      const idsArray = Array.from(selectedPhotoIds);
+      document.getElementById('pageTitle').innerText = "Deleting...";
+
+      try {
         const res = await fetch(`${API_BASE}/delete`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ photo_ids: [msgId] })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photo_ids: idsArray })
         });
         const data = await res.json();
         if (data.success) {
-            fetchNotes();
+          clearSelection();
+          document.getElementById('pageTitle').innerText = "Cloud Gallery";
+          fetchGallery(DEVICE_ID());
+        } else {
+          alert("Error: " + data.error);
+          document.getElementById('pageTitle').innerText = "Cloud Gallery";
         }
-    } catch (err) {
-        alert("नोट डिलीट नहीं हो सका!");
+      } catch (err) {
+        alert("Delete Failed!");
+        document.getElementById('pageTitle').innerText = "Cloud Gallery";
+      }
     }
-}
 
-async function editNote(msgId, oldText) {
-    const newText = prompt("नोट एडिट करें:", oldText);
-    if (newText === null || newText.trim() === "" || newText.trim() === oldText) return;
+    function triggerUpload() {
+      const pass = localStorage.getItem('device_password');
+      if (!pass) {
+        showAuthPopup(false);
+        return;
+      }
+      document.getElementById('hiddenFileInput').click();
+    }
 
-    try {
-        // Step 1: पुराना नोट डिलीट करें (/api/delete endpoint का उपयोग करके)
-        await fetch(`${API_BASE}/delete`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ photo_ids: [msgId] })
+    async function uploadImagesSequentially() {
+      const fileInput = document.getElementById('hiddenFileInput');
+      const files = fileInput.files;
+      if (!files || files.length === 0) return;
+
+      const totalFiles = files.length;
+      let successCount = 0;
+
+      for (let i = 0; i < totalFiles; i++) {
+        document.getElementById('pageTitle').innerText = `Uploading ${i + 1}/${totalFiles}...`;
+        
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        formData.append('device_id', DEVICE_ID());
+
+        try {
+          const res = await fetch(`${API_BASE}/upload`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data.success) {
+            successCount++;
+          }
+        } catch (err) {
+          console.error("Upload error for file index", i);
+        }
+      }
+
+      fileInput.value = "";
+      document.getElementById('pageTitle').innerText = "Cloud Gallery";
+      fetchGallery(DEVICE_ID());
+      
+      if (successCount > 0) {
+        alert(`${successCount} फोटो सफलतापूर्वक अपलोड हो गई!`);
+      }
+    }
+
+    function openModal(url, dateStr) {
+      document.getElementById('fullImg').src = url;
+      document.getElementById('modalDate').innerText = "Uploaded: " + dateStr;
+      document.getElementById('imgModal').style.display = 'flex';
+    }
+    function closeZoom() {
+      document.getElementById('imgModal').style.display = 'none';
+    }
+
+    /* === ऑथेंटिकेशन / लॉगिन === */
+    function showAuthPopup(login) {
+      isLoginMode = login;
+      const modal = document.getElementById('authModal');
+      const idInput = document.getElementById('authIdInput');
+      const passInput = document.getElementById('authPassInput');
+      const title = document.getElementById('authTitle');
+      const btn = document.getElementById('authBtn');
+      const switchText = document.getElementById('switchText');
+
+      modal.style.display = 'flex';
+      passInput.value = "";
+
+      if (isLoginMode) {
+        title.innerText = "पुराने अकाउंट में लॉगिन करें";
+        idInput.removeAttribute('readonly');
+        idInput.value = "";
+        idInput.placeholder = "अपनी 5-अंक की ID डालें";
+        btn.innerText = "Login करें";
+        switchText.innerHTML = "नया अकाउंट बनाना है? <span>यहाँ क्लिक करें</span>";
+      } else {
+        title.innerText = "सुरक्षा पासवर्ड बनाएं";
+        idInput.setAttribute('readonly', true);
+        idInput.value = localStorage.getItem('device_5digit_code') || '';
+        btn.innerText = "पासवर्ड सेट करें";
+        switchText.innerHTML = "पुराना अकाउंट है? <span>लॉगिन करें</span>";
+      }
+    }
+
+    function openLoginModal() {
+      showAuthPopup(true);
+    }
+
+    function toggleAuthMode() {
+      showAuthPopup(!isLoginMode);
+    }
+
+    async function submitAuth() {
+      const idVal = document.getElementById('authIdInput').value.trim();
+      const passVal = document.getElementById('authPassInput').value.trim();
+
+      if (!idVal || !passVal) {
+        alert("कृपया ID और पासवर्ड दोनों भरें!");
+        return;
+      }
+
+      const endpoint = isLoginMode ? `${API_BASE}/login` : `${API_BASE}/register`;
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_id: idVal, password: passVal })
         });
 
-        // Step 2: नया एडिटेड नोट सेव करें
-        await fetch(`${API_BASE}/notes/add`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ device_id: currentDeviceId, text: newText })
-        });
+        const data = await response.json();
 
-        fetchNotes();
-    } catch (err) {
-        alert("नोट अपडेट करने में एरर आया!");
+        if (response.ok && data.success) {
+          localStorage.setItem('device_5digit_code', idVal);
+          localStorage.setItem('device_password', passVal);
+          
+          document.getElementById('devCode').innerText = idVal;
+          document.getElementById('authModal').style.display = 'none';
+          updateHeaderButtons();
+          if(currentTab === 'notes') fetchNotes(idVal);
+          else fetchGallery(idVal);
+          alert(isLoginMode ? "सफलतापूर्वक लॉगिन हो गया!" : "पासवर्ड सुरक्षित हो गया!");
+        } else {
+          alert(data.error || "गलत पासवर्ड या आईडी!");
+        }
+      } catch (err) {
+        alert("कनेक्शन एरर! कृपया दोबारा कोशिश करें।");
+      }
     }
-}
 
-function escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-</script>
+    function logoutUser() {
+      if (confirm("क्या आप सचमुच लॉग-आउट करना चाहते हैं?")) {
+        localStorage.removeItem('device_password');
+        const newId = Math.floor(10000 + Math.random() * 90000).toString();
+        localStorage.setItem('device_5digit_code', newId);
+        
+        document.getElementById('devCode').innerText = newId;
+        updateHeaderButtons();
+        if(currentTab === 'notes') fetchNotes(newId);
+        else fetchGallery(newId);
+        alert("सफलतापूर्वक लॉग-आउट हो गए!");
+      }
+    }
 
+    initUser();
+  </script>
 </body>
 </html>
