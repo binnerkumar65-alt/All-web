@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Private Cloud App</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding-bottom: 70px; }
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding-bottom: 80px; }
     
     .header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     h2 { color: #38bdf8; margin: 0; font-size: 1.4rem; }
@@ -20,12 +20,12 @@
     .view-section { width: 100%; max-width: 500px; display: none; }
     .view-section.active { display: block; }
 
-    /* గैलरी स्टाइल */
+    /* गैलरी स्टाइल */
     .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
     @media (max-width: 400px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
 
-    .gallery-card { background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; cursor: pointer; aspect-ratio: 1 / 1; position: relative; user-select: none; }
-    .gallery-card img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-card { background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; cursor: pointer; aspect-ratio: 1 / 1; position: relative; user-select: none; -webkit-user-select: none; }
+    .gallery-card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     .photo-date { position: absolute; bottom: 0; background: rgba(15, 23, 42, 0.8); width: 100%; font-size: 0.65rem; color: #cbd5e1; text-align: center; padding: 3px 0; }
     
     .gallery-card.selected { border: 3px solid #38bdf8; transform: scale(0.96); }
@@ -35,7 +35,12 @@
     .notes-box { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
     textarea { width: 100%; height: 100px; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 1rem; resize: vertical; }
     .save-note-btn { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; }
-    .note-card { background: #1e293b; border: 1px solid #334155; padding: 12px; border-radius: 8px; margin-bottom: 10px; word-break: break-word; font-size: 0.9rem; line-height: 1.4; color: #e2e8f0; }
+    
+    .note-card { background: #1e293b; border: 1px solid #334155; padding: 12px; border-radius: 8px; margin-bottom: 10px; word-break: break-word; font-size: 0.9rem; line-height: 1.4; color: #e2e8f0; display: flex; flex-direction: column; gap: 10px; }
+    .note-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .note-btn { padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
+    .edit-note-btn { background: #38bdf8; color: #0f172a; }
+    .delete-note-btn { background: #ef4444; color: #fff; }
 
     /* एक्शन बार */
     .action-bar { display: none; position: fixed; bottom: 15px; background: #1e293b; border: 1px solid #334155; padding: 10px 20px; border-radius: 30px; z-index: 1500; gap: 15px; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
@@ -112,7 +117,8 @@
     let isLoginMode = false;
     let selectedPhotoIds = new Set();
     let isSelectionMode = false;
-    let currentTab = 'gallery'; // 'gallery' या 'notes'
+    let currentTab = 'gallery';
+    let editingNoteId = null; // एडिट मोड ट्रैकिंग के लिए
 
     function toggleView(tab) {
       currentTab = tab;
@@ -181,7 +187,7 @@
 
     const DEVICE_ID = () => localStorage.getItem('device_5digit_code');
 
-    /* === 1. गैलरी लॉजिक + स्थानीय 10 फोटो कैश === */
+    /* === 1. गैलरी लॉजिक (लॉन्ग प्रेस फिक्स के साथ) === */
     function renderPhotos(photos) {
       const container = document.getElementById('gallery');
       if (!photos || photos.length === 0) {
@@ -200,12 +206,19 @@
         const dateObj = new Date(p.date);
         const formattedDate = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-        card.onclick = () => {
-          if (isSelectionMode) {
-            toggleSelectPhoto(p.id, card);
-          } else {
-            openModal(p.url, formattedDate);
-          }
+        let pressTimer = null;
+        let isLongPress = false;
+
+        const startPress = () => {
+          isLongPress = false;
+          pressTimer = setTimeout(() => {
+            isLongPress = true;
+            startSelectionMode(p.id, card);
+          }, 500);
+        };
+
+        const cancelPress = () => {
+          if (pressTimer) clearTimeout(pressTimer);
         };
 
         card.oncontextmenu = (e) => {
@@ -213,15 +226,22 @@
           startSelectionMode(p.id, card);
         };
 
-        let pressTimer;
-        card.ontouchstart = () => {
-          pressTimer = setTimeout(() => {
-            startSelectionMode(p.id, card);
-          }, 600);
+        card.addEventListener('touchstart', startPress, {passive: true});
+        card.addEventListener('touchend', cancelPress, {passive: true});
+        card.addEventListener('touchmove', cancelPress, {passive: true});
+
+        card.onclick = (e) => {
+          if (isLongPress) {
+            isLongPress = false;
+            return;
+          }
+          if (isSelectionMode) {
+            toggleSelectPhoto(p.id, card);
+          } else {
+            openModal(p.url, formattedDate);
+          }
         };
-        card.ontouchend = () => clearTimeout(pressTimer);
-        card.ontouchmove = () => clearTimeout(pressTimer);
-        
+
         card.innerHTML = `
           <img src="${p.url}" loading="lazy">
           <div class="photo-date">${formattedDate}</div>
@@ -231,22 +251,18 @@
     }
 
     async function fetchGallery(targetId) {
-      // 10 फोटो लोकल कैश से दिखाएं
       const cachedPhotos = localStorage.getItem(`cached_photos_${targetId}`);
       if (cachedPhotos) {
         renderPhotos(JSON.parse(cachedPhotos));
       }
 
-      // सर्वर से ताज़ा फोटो लाएं
       try {
         const res = await fetch(`${API_BASE}/gallery?device_id=${targetId}`);
         const photos = await res.json();
         
         if (Array.isArray(photos)) {
-          // शुरुआती 10 फोटो को कैश में अपडेट करें
           const top10 = photos.slice(0, 10);
           localStorage.setItem(`cached_photos_${targetId}`, JSON.stringify(top10));
-          
           renderPhotos(photos);
         }
       } catch (err) {
@@ -254,7 +270,7 @@
       }
     }
 
-    /* === 2. नोट्स लॉजिक (Server Sync) === */
+    /* === 2. नोट्स लॉजिक (Edit और Delete फीचर्स के साथ) === */
     async function fetchNotes(targetId) {
       const list = document.getElementById('notesList');
       try {
@@ -270,7 +286,19 @@
         notes.forEach(n => {
           const card = document.createElement('div');
           card.className = 'note-card';
-          card.innerText = n.text;
+          
+          const textSpan = document.createElement('div');
+          textSpan.innerText = n.text;
+          
+          const actions = document.createElement('div');
+          actions.className = 'note-actions';
+          actions.innerHTML = `
+            <button class="note-btn edit-note-btn" onclick="prepareEditNote('${n.id}', \`${n.text.replace(/`/g, '\\`')}\`)">Edit</button>
+            <button class="note-btn delete-note-btn" onclick="deleteNote('${n.id}')">Delete</button>
+          `;
+
+          card.appendChild(textSpan);
+          card.appendChild(actions);
           list.appendChild(card);
         });
       } catch (err) {
@@ -292,25 +320,61 @@
         return;
       }
 
+      // यदि पहले से बने नोट को एडिट कर रहे हैं
+      const endpoint = editingNoteId ? `${API_BASE}/notes/edit` : `${API_BASE}/notes/add`;
+      const payload = editingNoteId 
+        ? { device_id: DEVICE_ID(), note_id: editingNoteId, text: text }
+        : { device_id: DEVICE_ID(), text: text };
+
       try {
-        const res = await fetch(`${API_BASE}/notes/add`, {
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ device_id: DEVICE_ID(), text: text })
+          body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (data.success) {
           input.value = "";
+          editingNoteId = null;
+          document.querySelector('.save-note-btn').innerText = "नोट्स सेव करें";
           fetchNotes(DEVICE_ID());
         } else {
-          alert("नोट सेव करने में विफल: " + (data.error || ""));
+          alert("विफलता: " + (data.error || ""));
         }
       } catch (err) {
-        alert("सर्वर एरर! नोट सेव नहीं हो सका।");
+        alert("सर्वर एरर! नोट सेव/अपडेट नहीं हो सका।");
       }
     }
 
-    /* === फोटो सिलेक्शन और डिलीट === */
+    function prepareEditNote(id, text) {
+      const input = document.getElementById('noteInput');
+      input.value = text;
+      editingNoteId = id;
+      document.querySelector('.save-note-btn').innerText = "अपडेट करें";
+      input.focus();
+    }
+
+    async function deleteNote(id) {
+      if (!confirm("क्या आप इस नोट को डिलीट करना चाहते हैं?")) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/notes/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_id: DEVICE_ID(), note_id: id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          fetchNotes(DEVICE_ID());
+        } else {
+          alert("डिलीट विफल: " + (data.error || ""));
+        }
+      } catch (err) {
+        alert("डिलीट करने में त्रुटि आई!");
+      }
+    }
+
+    /* === 3. फोटो सिलेक्शन और डिलीट === */
     function startSelectionMode(id, cardElement) {
       isSelectionMode = true;
       toggleSelectPhoto(id, cardElement);
@@ -338,7 +402,9 @@
       selectedPhotoIds.clear();
       isSelectionMode = false;
       document.getElementById('actionBar').style.display = 'none';
-      fetchGallery(DEVICE_ID());
+      
+      const cards = document.querySelectorAll('.gallery-card');
+      cards.forEach(c => c.classList.remove('selected'));
     }
 
     async function deleteSelectedPhotos() {
