@@ -100,7 +100,7 @@
         <div class="user-info">
           <h2 class="app-title">Cloud Hub</h2>
           <div class="status-badge">
-            ID: <span id="devCode">...</span> • <span class="secured" id="secStatus"> Connected <i class="fa-solid fa-lock"></i></span>
+            ID: <span id="devCode">...</span> • <span class="secured" id="secStatus">Firebase Connected <i class="fa-solid fa-lock"></i></span>
           </div>
         </div>
       </div>
@@ -198,7 +198,8 @@
     const db = firebase.database();
 
     let isLoginMode = true;
-    let memorySessionAuth = sessionStorage.getItem('is_authenticated') === 'true';
+    // sessionStorage की जगह localStorage का उपयोग किया गया है ताकि लिंक दोबारा खोलने पर लॉगआउट न हो
+    let memorySessionAuth = localStorage.getItem('is_authenticated') === 'true';
     let currentTab = 'gallery';
     
     let selectedPhotoIds = new Set();
@@ -404,7 +405,7 @@
       fileInput.click();
     }
 
-    // --- SEQUENTIAL UPLOAD (एक-एक करके अपलोड करने का फिक्स) ---
+    // --- SEQUENTIAL UPLOAD (एक-एक करके अपलोड) ---
     async function uploadImagesSequentially() {
       const fileInput = document.getElementById('hiddenFileInput');
       const files = fileInput.files;
@@ -503,7 +504,8 @@
         if (data.success) {
           localStorage.setItem('device_5digit_code', device_id);
           memorySessionAuth = true; 
-          sessionStorage.setItem('is_authenticated', 'true');
+          // sessionStorage की जगह localStorage का उपयोग किया गया है
+          localStorage.setItem('is_authenticated', 'true');
           document.getElementById('authModal').style.display = 'none';
           initUser(); 
           showToast(isLoginMode ? "Login successful!" : "Registered successfully!", "success");
@@ -520,7 +522,8 @@
     
     function confirmLogout() {
       memorySessionAuth = false; 
-      sessionStorage.removeItem('is_authenticated');
+      // लॉगआउट होने पर localStorage से ऑथेंटिकेशन हटा दिया जाएगा
+      localStorage.removeItem('is_authenticated');
       closeLogoutConfirm();
       initUser(); 
       showToast("Logged out successfully", "info");
