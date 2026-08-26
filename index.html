@@ -146,6 +146,7 @@
     <button class="cancel-select-btn" onclick="clearSelection()">Cancel</button>
   </div>
 
+  <!-- Image Zoom Modal -->
   <div class="modal" id="imgModal">
     <button class="close-modal" onclick="closeZoom()">✕</button>
     <div class="modal-content-container">
@@ -154,6 +155,7 @@
     </div>
   </div>
 
+  <!-- Auth / Login / Register Modal -->
   <div class="auth-overlay" id="authModal">
     <div class="auth-box">
       <button class="close-auth-modal" onclick="closeAuthModal()">✕</button>
@@ -179,6 +181,7 @@
     </div>
   </div>
 
+  <!-- Logout Warning Modal (बिल्कुल सही तरीके से जोड़ा गया है) -->
   <div class="confirm-overlay" id="logoutConfirmModal">
     <div class="confirm-box">
       <i class="fa-solid fa-triangle-exclamation"></i>
@@ -197,6 +200,11 @@
     let selectedPhotoIds = new Set();
     let isSelectionMode = false;
     let currentTab = 'gallery';
+    let memorySessionAuth = false;
+
+    let allPhotosData = [];
+    let displayedCount = 0;
+    const PAGE_LIMIT = 5;
 
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
@@ -209,8 +217,7 @@
     }
 
     function triggerProfileUpload() {
-      const pass = localStorage.getItem('device_password');
-      if (!pass) return showAuthPopup(false);
+      if (!memorySessionAuth) return showAuthPopup(true);
       document.getElementById('profileFileInput').click();
     }
 
@@ -231,7 +238,6 @@
         if (data.success && data.url) {
           showToast("Profile Photo Updated!", "success");
           document.getElementById('avatarDisplay').innerHTML = `<img src="${data.url}" alt="Profile">`;
-          localStorage.setItem('cached_pfp_' + DEVICE_ID(), data.url);
         } else {
           showToast(data.error || "Upload failed!", "error");
         }
@@ -241,23 +247,16 @@
     }
 
     async function fetchProfilePhoto(targetId) {
-      // पहले localStorage से तुरंत लोड करें (कैश)
-      const cachedPfp = localStorage.getItem('cached_pfp_' + targetId);
-      if (cachedPfp) {
-        document.getElementById('avatarDisplay').innerHTML = `<img src="${cachedPfp}" alt="Profile">`;
-      }
-
       try {
         const res = await fetch(`${API_BASE}/get-pfp?device_id=${targetId}&t=${Date.now()}`, { cache: 'no-store' });
         const data = await res.json();
         if (data.success && data.url) {
           document.getElementById('avatarDisplay').innerHTML = `<img src="${data.url}" alt="Profile">`;
-          localStorage.setItem('cached_pfp_' + targetId, data.url);
-        } else if (!cachedPfp) {
+        } else {
           document.getElementById('avatarDisplay').innerText = "CH";
         }
       } catch (err) {
-        if (!cachedPfp) document.getElementById('avatarDisplay').innerText = "CH";
+        document.getElementById('avatarDisplay').innerText = "CH";
       }
     }
 
@@ -275,10 +274,9 @@
 
     function updateHeaderButtons() {
       const container = document.getElementById('topBtnsContainer');
-      const savedPass = localStorage.getItem('device_password');
-      document.getElementById('secStatus').innerHTML = savedPass ? `Secured <i class="fa-solid fa-lock"></i>` : `Guest <i class="fa-solid fa-unlock"></i>`;
+      document.getElementById('secStatus').innerHTML = memorySessionAuth ? `Secured <i class="fa-solid fa-lock"></i>` : `Guest <i class="fa-solid fa-unlock"></i>`;
       
-      container.innerHTML = savedPass 
+      container.innerHTML = memorySessionAuth 
         ? `${currentTab==='gallery' ? '<button class="circle-btn upload-btn" onclick="triggerUpload()"><i class="fa-solid fa-plus"></i></button>' : ''}<button class="circle-btn logout-icon-btn" onclick="showLogoutWarning()"><i class="fa-solid fa-power-off"></i></button>`
         : `${currentTab==='gallery' ? '<button class="circle-btn upload-btn" onclick="triggerUpload()"><i class="fa-solid fa-plus"></i></button>' : ''}<button class="circle-btn" onclick="openLoginModal()"><i class="fa-solid fa-key"></i></button>`;
     }
@@ -289,26 +287,15 @@
       document.getElementById('devCode').innerText = devId;
 
       updateHeaderButtons();
-
-      if (!localStorage.getItem('device_password')) {
-        showAuthPopup(false);
-      } else {
-        fetchProfilePhoto(devId);
-        fetchGallery(devId);
-      }
+      fetchProfilePhoto(devId);
+      fetchGallery(devId);
     }
 
     const DEVICE_ID = () => localStorage.getItem('device_5digit_code');
 
-    function renderPhotos(photos) {
+    function appendPhotosToGallery(photosToRender) {
       const container = document.getElementById('gallery');
-      if (!photos || photos.length === 0) {
-        container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>No photos found.</p>";
-        return;
-      }
-
-      container.innerHTML = "";
-      photos.forEach(p => {
+      photosToRender.forEach(p => {
         const card = document.createElement('div');
         card.className = 'gallery-card' + (selectedPhotoIds.has(p.id) ? ' selected' : '');
         const dateObj = p.date ? new Date(p.date * 1000) : new Date();
@@ -322,38 +309,48 @@
       });
     }
 
+    function loadMorePhotos() {
+      if (displayedCount >= allPhotosData.length) return;
+      const nextBatch = allPhotosData.slice(displayedCount, displayedCount + PAGE_LIMIT);
+      displayedCount += nextBatch.length;
+      appendPhotosToGallery(nextBatch);
+    }
+
+    window.addEventListener('scroll', () => {
+      if (currentTab !== 'gallery') return;
+      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+        loadMorePhotos();
+      }
+    });
+
     async function fetchGallery(targetId) {
       const container = document.getElementById('gallery');
-      
-      // 1. पहले LocalStorage (Cache) से पहले 10 फोटो तुरंत लोड करें
-      const cachedPhotos = localStorage.getItem('cached_photos_' + targetId);
-      if (cachedPhotos) {
-        try {
-          const parsed = JSON.parse(cachedPhotos);
-          renderPhotos(parsed.slice(0, 10));
-        } catch(e){}
-      } else {
-        container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading photos...</p>";
-      }
+      container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading photos...</p>";
 
-      // 2. बैकग्राउंड में सर्वर से लेटेस्ट डेटा मंगाएं
       try {
         const res = await fetch(`${API_BASE}/gallery?device_id=${targetId}&t=${Date.now()}`, { cache: 'no-store' });
         const photos = await res.json();
         if (Array.isArray(photos)) {
-          localStorage.setItem('cached_photos_' + targetId, JSON.stringify(photos));
-          renderPhotos(photos);
+          allPhotosData = photos;
+          displayedCount = 0;
+          container.innerHTML = "";
+          
+          if (allPhotosData.length === 0) {
+            container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>No photos found.</p>";
+          } else {
+            loadMorePhotos();
+          }
         }
       } catch (err) { 
-        console.error(err);
-        if (!cachedPhotos) {
-          container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#ef4444;'>Failed to load photos.</p>";
-        }
+        container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#ef4444;'>Failed to load photos.</p>";
       }
     }
 
     function triggerUpload() {
-      if (!localStorage.getItem('device_password')) return showAuthPopup(false);
+      if (!memorySessionAuth) {
+        showToast("Please login first to upload!", "error");
+        return showAuthPopup(true);
+      }
       document.getElementById('hiddenFileInput').click();
     }
 
@@ -381,28 +378,16 @@
 
     async function fetchNotes(targetId) {
       const list = document.getElementById('notesList');
-      
-      // 1. पहले LocalStorage से पहले 10 नोट्स तुरंत लोड करें
-      const cachedNotes = localStorage.getItem('cached_notes_' + targetId);
-      if (cachedNotes) {
-        try {
-          const parsedNotes = JSON.parse(cachedNotes);
-          displayNotes(parsedNotes.slice(0, 10));
-        } catch(e){}
-      } else {
-        list.innerHTML = "<p style='text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading notes...</p>";
-      }
+      list.innerHTML = "<p style='text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading notes...</p>";
 
-      // 2. बैकग्राउंड में सर्वर से लेटेस्ट नोट्स मंगाएं
       try {
         const res = await fetch(`${API_BASE}/notes?device_id=${targetId}&t=${Date.now()}`, { cache: 'no-store' });
         const notes = await res.json();
         if (Array.isArray(notes)) {
-          localStorage.setItem('cached_notes_' + targetId, JSON.stringify(notes));
           displayNotes(notes);
         }
       } catch (err) { 
-        if (!cachedNotes) list.innerHTML = "<p style='color:#ef4444; text-align:center;'>Failed to load notes.</p>"; 
+        list.innerHTML = "<p style='color:#ef4444; text-align:center;'>Failed to load notes.</p>"; 
       }
     }
 
@@ -425,6 +410,11 @@
     }
 
     async function saveNote() {
+      if (!memorySessionAuth) {
+        showToast("Please login first to save notes!", "error");
+        return showAuthPopup(true);
+      }
+
       const input = document.getElementById('noteInput');
       const text = input.value.trim();
       if (!text) return showToast("Enter text!", "error");
@@ -441,6 +431,7 @@
     }
 
     async function deleteNote(id) {
+      if (!memorySessionAuth) return showAuthPopup(true);
       const targetElement = document.getElementById(`note-card-${id}`);
       if (targetElement) {
         targetElement.remove();
@@ -489,6 +480,7 @@
     function clearSelection() { selectedPhotoIds.clear(); isSelectionMode = false; document.getElementById('actionBar').style.display = 'none'; document.querySelectorAll('.gallery-card').forEach(c => c.classList.remove('selected')); }
 
     async function deleteSelectedPhotos() {
+      if (!memorySessionAuth) return showAuthPopup(true);
       await fetch(`${API_BASE}/delete`, { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
@@ -503,40 +495,64 @@
       const valid = document.getElementById('authIdInput').value && document.getElementById('authPassInput').value;
       document.getElementById('authBtn').classList.toggle('valid-btn', !!valid);
     }
+    
     function showAuthPopup(login) {
       isLoginMode = login;
-      document.getElementById('authModal').style.display = 'flex';
+      const modal = document.getElementById('authModal');
+      modal.style.display = 'flex';
+      
+      // ✅ लॉगिन और रजिस्टर मोड के हिसाब से सही टेक्स्ट और बटन
+      document.getElementById('authTitle').innerText = login ? "Login Account" : "Set Security Password";
+      document.getElementById('authSubTitle').innerText = login ? "Enter your ID and password to access your secure cloud." : "Secure your private cloud account with a secret password.";
+      document.getElementById('authBtn').innerText = login ? "Login" : "Set Password";
+      document.getElementById('switchText').innerHTML = login ? "Don't have an ID? <span>Register Here</span>" : "Already have an account? <span>Login Here</span>";
+      
       document.getElementById('authIdInput').value = login ? "" : (localStorage.getItem('device_5digit_code') || '');
+      document.getElementById('authPassInput').value = "";
+      document.getElementById('authBtn').classList.remove('valid-btn');
     }
+
     function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
     function openLoginModal() { showAuthPopup(true); }
     function toggleAuthMode() { showAuthPopup(!isLoginMode); }
 
     async function submitAuth() {
-      const device_id = document.getElementById('authIdInput.value') || document.getElementById('authIdInput').value;
-      const password = document.getElementById('authPassInput').value;
+      const device_id = document.getElementById('authIdInput').value.trim();
+      const password = document.getElementById('authPassInput').value.trim();
+      if (!device_id || !password) return;
+
       const endpoint = isLoginMode ? `${API_BASE}/login` : `${API_BASE}/register`;
 
-      const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ device_id, password }) });
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem('device_5digit_code', device_id);
-        localStorage.setItem('device_password', password);
-        closeAuthModal();
-        initUser();
-        showToast("Success!", "success");
-      } else {
-        showToast(data.error || "Failed!", "error");
+      try {
+        const res = await fetch(endpoint, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ device_id, password }) 
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          localStorage.setItem('device_5digit_code', device_id);
+          memorySessionAuth = true; 
+          closeAuthModal();
+          initUser(); 
+          showToast(isLoginMode ? "Login successful!" : "Account secured!", "success");
+        } else {
+          showToast(data.error || "Authentication failed!", "error");
+        }
+      } catch (err) {
+        showToast("Connection error!", "error");
       }
     }
 
     function showLogoutWarning() { document.getElementById('logoutConfirmModal').style.display = 'flex'; }
     function closeLogoutConfirm() { document.getElementById('logoutConfirmModal').style.display = 'none'; }
+    
     function confirmLogout() {
-      localStorage.removeItem('device_password');
-      localStorage.setItem('device_5digit_code', Math.floor(10000 + Math.random() * 90000).toString());
+      memorySessionAuth = false; 
       closeLogoutConfirm();
-      initUser();
+      initUser(); 
+      showToast("Logged out successfully", "info");
     }
 
     initUser();
