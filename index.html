@@ -231,6 +231,7 @@
         if (data.success && data.url) {
           showToast("Profile Photo Updated!", "success");
           document.getElementById('avatarDisplay').innerHTML = `<img src="${data.url}" alt="Profile">`;
+          localStorage.setItem('cached_pfp_' + DEVICE_ID(), data.url);
         } else {
           showToast(data.error || "Upload failed!", "error");
         }
@@ -240,16 +241,23 @@
     }
 
     async function fetchProfilePhoto(targetId) {
+      // पहले localStorage से तुरंत लोड करें (कैश)
+      const cachedPfp = localStorage.getItem('cached_pfp_' + targetId);
+      if (cachedPfp) {
+        document.getElementById('avatarDisplay').innerHTML = `<img src="${cachedPfp}" alt="Profile">`;
+      }
+
       try {
         const res = await fetch(`${API_BASE}/get-pfp?device_id=${targetId}&t=${Date.now()}`, { cache: 'no-store' });
         const data = await res.json();
         if (data.success && data.url) {
           document.getElementById('avatarDisplay').innerHTML = `<img src="${data.url}" alt="Profile">`;
-        } else {
+          localStorage.setItem('cached_pfp_' + targetId, data.url);
+        } else if (!cachedPfp) {
           document.getElementById('avatarDisplay').innerText = "CH";
         }
       } catch (err) {
-        document.getElementById('avatarDisplay').innerText = "CH";
+        if (!cachedPfp) document.getElementById('avatarDisplay').innerText = "CH";
       }
     }
 
@@ -315,11 +323,33 @@
     }
 
     async function fetchGallery(targetId) {
+      const container = document.getElementById('gallery');
+      
+      // 1. पहले LocalStorage (Cache) से पहले 10 फोटो तुरंत लोड करें
+      const cachedPhotos = localStorage.getItem('cached_photos_' + targetId);
+      if (cachedPhotos) {
+        try {
+          const parsed = JSON.parse(cachedPhotos);
+          renderPhotos(parsed.slice(0, 10));
+        } catch(e){}
+      } else {
+        container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading photos...</p>";
+      }
+
+      // 2. बैकग्राउंड में सर्वर से लेटेस्ट डेटा मंगाएं
       try {
         const res = await fetch(`${API_BASE}/gallery?device_id=${targetId}&t=${Date.now()}`, { cache: 'no-store' });
         const photos = await res.json();
-        if (Array.isArray(photos)) renderPhotos(photos);
-      } catch (err) { console.error(err); }
+        if (Array.isArray(photos)) {
+          localStorage.setItem('cached_photos_' + targetId, JSON.stringify(photos));
+          renderPhotos(photos);
+        }
+      } catch (err) { 
+        console.error(err);
+        if (!cachedPhotos) {
+          container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#ef4444;'>Failed to load photos.</p>";
+        }
+      }
     }
 
     function triggerUpload() {
@@ -351,24 +381,47 @@
 
     async function fetchNotes(targetId) {
       const list = document.getElementById('notesList');
+      
+      // 1. पहले LocalStorage से पहले 10 नोट्स तुरंत लोड करें
+      const cachedNotes = localStorage.getItem('cached_notes_' + targetId);
+      if (cachedNotes) {
+        try {
+          const parsedNotes = JSON.parse(cachedNotes);
+          displayNotes(parsedNotes.slice(0, 10));
+        } catch(e){}
+      } else {
+        list.innerHTML = "<p style='text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading notes...</p>";
+      }
+
+      // 2. बैकग्राउंड में सर्वर से लेटेस्ट नोट्स मंगाएं
       try {
         const res = await fetch(`${API_BASE}/notes?device_id=${targetId}&t=${Date.now()}`, { cache: 'no-store' });
         const notes = await res.json();
-        list.innerHTML = "";
-        document.getElementById('notesCountTitle').innerText = `Saved Notes (${notes.length || 0})`;
-        if (!notes || !notes.length) return list.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No notes found.</p>";
+        if (Array.isArray(notes)) {
+          localStorage.setItem('cached_notes_' + targetId, JSON.stringify(notes));
+          displayNotes(notes);
+        }
+      } catch (err) { 
+        if (!cachedNotes) list.innerHTML = "<p style='color:#ef4444; text-align:center;'>Failed to load notes.</p>"; 
+      }
+    }
 
-        notes.forEach(n => {
-          const card = document.createElement('div');
-          card.className = 'note-card';
-          card.id = `note-card-${n.id}`;
-          card.innerHTML = `<div class="note-text">${n.text}</div>
-            <div class="note-actions">
-              <button class="note-action-btn delete" onclick="deleteNote('${n.id}')"><i class="fa-solid fa-trash"></i></button>
-            </div>`;
-          list.appendChild(card);
-        });
-      } catch (err) { list.innerHTML = "<p style='color:#ef4444;'>Failed to load notes.</p>"; }
+    function displayNotes(notes) {
+      const list = document.getElementById('notesList');
+      list.innerHTML = "";
+      document.getElementById('notesCountTitle').innerText = `Saved Notes (${notes.length || 0})`;
+      if (!notes || !notes.length) return list.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No notes found.</p>";
+
+      notes.forEach(n => {
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        card.id = `note-card-${n.id}`;
+        card.innerHTML = `<div class="note-text">${n.text}</div>
+          <div class="note-actions">
+            <button class="note-action-btn delete" onclick="deleteNote('${n.id}')"><i class="fa-solid fa-trash"></i></button>
+          </div>`;
+        list.appendChild(card);
+      });
     }
 
     async function saveNote() {
@@ -387,9 +440,7 @@
       fetchNotes(DEVICE_ID());
     }
 
-    // FIXED DELETE NOTE FUNCTION
     async function deleteNote(id) {
-      // 1. UI update
       const targetElement = document.getElementById(`note-card-${id}`);
       if (targetElement) {
         targetElement.remove();
@@ -405,7 +456,6 @@
       showToast("Deleting note...", "info");
 
       try {
-        // 2. Send both note_id and id to match any backend API specification
         const res = await fetch(`${API_BASE}/notes/delete`, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
@@ -418,6 +468,7 @@
 
         if (res.ok) {
           showToast("Note Deleted!", "success");
+          fetchNotes(DEVICE_ID());
         } else {
           showToast("Delete failed, refreshing...", "error");
           fetchNotes(DEVICE_ID());
@@ -462,7 +513,7 @@
     function toggleAuthMode() { showAuthPopup(!isLoginMode); }
 
     async function submitAuth() {
-      const device_id = document.getElementById('authIdInput').value;
+      const device_id = document.getElementById('authIdInput.value') || document.getElementById('authIdInput').value;
       const password = document.getElementById('authPassInput').value;
       const endpoint = isLoginMode ? `${API_BASE}/login` : `${API_BASE}/register`;
 
