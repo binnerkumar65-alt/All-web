@@ -124,7 +124,7 @@
     </div>
 
     <div class="view-section active" id="gallerySection">
-      <div class="gallery-grid" id="gallery">Photos loading...</div>
+      <div class="gallery-grid" id="gallery"></div>
     </div>
 
     <div class="view-section" id="notesSection">
@@ -136,7 +136,7 @@
         </button>
       </div>
       <div class="section-subtitle" id="notesCountTitle">Saved Notes</div>
-      <div id="notesList">Notes loading...</div>
+      <div id="notesList"></div>
     </div>
   </div>
 
@@ -158,7 +158,7 @@
   <!-- Auth / Login / Register Modal -->
   <div class="auth-overlay" id="authModal">
     <div class="auth-box">
-      <button class="close-auth-modal" onclick="closeAuthModal()">✕</button>
+      <button class="close-auth-modal" id="closeAuthBtn" onclick="closeAuthModal()" style="display: none;">✕</button>
       <h3 id="authTitle">Set Security Password</h3>
       <p id="authSubTitle">Secure your private cloud account with a secret password.</p>
       
@@ -181,7 +181,7 @@
     </div>
   </div>
 
-  <!-- Logout Warning Modal (बिल्कुल सही तरीके से जोड़ा गया है) -->
+  <!-- Logout Warning Modal -->
   <div class="confirm-overlay" id="logoutConfirmModal">
     <div class="confirm-box">
       <i class="fa-solid fa-triangle-exclamation"></i>
@@ -261,6 +261,10 @@
     }
 
     function toggleView(tab) {
+      if (!memorySessionAuth) {
+        showAuthPopup(true);
+        return;
+      }
       currentTab = tab;
       document.getElementById('gallerySection').classList.toggle('active', tab === 'gallery');
       document.getElementById('notesSection').classList.toggle('active', tab === 'notes');
@@ -278,7 +282,7 @@
       
       container.innerHTML = memorySessionAuth 
         ? `${currentTab==='gallery' ? '<button class="circle-btn upload-btn" onclick="triggerUpload()"><i class="fa-solid fa-plus"></i></button>' : ''}<button class="circle-btn logout-icon-btn" onclick="showLogoutWarning()"><i class="fa-solid fa-power-off"></i></button>`
-        : `${currentTab==='gallery' ? '<button class="circle-btn upload-btn" onclick="triggerUpload()"><i class="fa-solid fa-plus"></i></button>' : ''}<button class="circle-btn" onclick="openLoginModal()"><i class="fa-solid fa-key"></i></button>`;
+        : `<button class="circle-btn" onclick="openLoginModal()"><i class="fa-solid fa-key"></i></button>`;
     }
 
     function initUser() {
@@ -287,8 +291,19 @@
       document.getElementById('devCode').innerText = devId;
 
       updateHeaderButtons();
-      fetchProfilePhoto(devId);
-      fetchGallery(devId);
+      
+      if (!memorySessionAuth) {
+        // अगर लॉगआउट है, तो सीधे Login/Register स्क्रीन दिखाएं और गैलरी खाली रखें
+        allPhotosData = [];
+        document.getElementById('gallery').innerHTML = "";
+        document.getElementById('notesList').innerHTML = "";
+        document.getElementById('notesCountTitle').innerText = `Saved Notes (0)`;
+        document.getElementById('avatarDisplay').innerText = "CH";
+        showAuthPopup(true); // सीधा लॉगिन पेज खोलें
+      } else {
+        fetchProfilePhoto(devId);
+        fetchGallery(devId);
+      }
     }
 
     const DEVICE_ID = () => localStorage.getItem('device_5digit_code');
@@ -310,14 +325,14 @@
     }
 
     function loadMorePhotos() {
-      if (displayedCount >= allPhotosData.length) return;
+      if (!memorySessionAuth || displayedCount >= allPhotosData.length) return;
       const nextBatch = allPhotosData.slice(displayedCount, displayedCount + PAGE_LIMIT);
       displayedCount += nextBatch.length;
       appendPhotosToGallery(nextBatch);
     }
 
     window.addEventListener('scroll', () => {
-      if (currentTab !== 'gallery') return;
+      if (!memorySessionAuth || currentTab !== 'gallery') return;
       if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
         loadMorePhotos();
       }
@@ -325,6 +340,13 @@
 
     async function fetchGallery(targetId) {
       const container = document.getElementById('gallery');
+      
+      if (!memorySessionAuth) {
+        allPhotosData = [];
+        container.innerHTML = "";
+        return;
+      }
+
       container.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading photos...</p>";
 
       try {
@@ -347,14 +369,12 @@
     }
 
     function triggerUpload() {
-      if (!memorySessionAuth) {
-        showToast("Please login first to upload!", "error");
-        return showAuthPopup(true);
-      }
+      if (!memorySessionAuth) return showAuthPopup(true);
       document.getElementById('hiddenFileInput').click();
     }
 
     async function uploadImagesSequentially() {
+      if (!memorySessionAuth) return showAuthPopup(true);
       const files = document.getElementById('hiddenFileInput').files;
       for (let i = 0; i < files.length; i++) {
         showToast(`Uploading... (${i + 1}/${files.length})`, "info");
@@ -369,6 +389,7 @@
     }
 
     function openModal(url, dateStr) {
+      if (!memorySessionAuth) return showAuthPopup(true);
       document.getElementById('fullImg').src = url;
       document.getElementById('modalDate').innerText = "Uploaded: " + dateStr;
       document.getElementById('imgModal').style.display = 'flex';
@@ -378,6 +399,13 @@
 
     async function fetchNotes(targetId) {
       const list = document.getElementById('notesList');
+      
+      if (!memorySessionAuth) {
+        document.getElementById('notesCountTitle').innerText = `Saved Notes (0)`;
+        list.innerHTML = "";
+        return;
+      }
+
       list.innerHTML = "<p style='text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading notes...</p>";
 
       try {
@@ -410,10 +438,7 @@
     }
 
     async function saveNote() {
-      if (!memorySessionAuth) {
-        showToast("Please login first to save notes!", "error");
-        return showAuthPopup(true);
-      }
+      if (!memorySessionAuth) return showAuthPopup(true);
 
       const input = document.getElementById('noteInput');
       const text = input.value.trim();
@@ -433,9 +458,7 @@
     async function deleteNote(id) {
       if (!memorySessionAuth) return showAuthPopup(true);
       const targetElement = document.getElementById(`note-card-${id}`);
-      if (targetElement) {
-        targetElement.remove();
-      }
+      if (targetElement) targetElement.remove();
 
       const list = document.getElementById('notesList');
       const currentNotesCount = list.querySelectorAll('.note-card').length;
@@ -450,11 +473,7 @@
         const res = await fetch(`${API_BASE}/notes/delete`, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            device_id: DEVICE_ID(), 
-            note_id: id,
-            id: id 
-          }) 
+          body: JSON.stringify({ device_id: DEVICE_ID(), note_id: id, id: id }) 
         });
 
         if (res.ok) {
@@ -470,13 +489,19 @@
       }
     }
 
-    function startSelectionMode(id, cardElement) { isSelectionMode = true; toggleSelectPhoto(id, cardElement); }
+    function startSelectionMode(id, cardElement) { 
+      if (!memorySessionAuth) return showAuthPopup(true);
+      isSelectionMode = true; 
+      toggleSelectPhoto(id, cardElement); 
+    }
+
     function toggleSelectPhoto(id, cardElement) {
       if (selectedPhotoIds.has(id)) { selectedPhotoIds.delete(id); cardElement.classList.remove('selected'); } 
       else { selectedPhotoIds.add(id); cardElement.classList.add('selected'); }
       document.getElementById('actionBar').style.display = selectedPhotoIds.size ? 'flex' : 'none';
       document.getElementById('selectedCountText').innerText = `${selectedPhotoIds.size} selected`;
     }
+
     function clearSelection() { selectedPhotoIds.clear(); isSelectionMode = false; document.getElementById('actionBar').style.display = 'none'; document.querySelectorAll('.gallery-card').forEach(c => c.classList.remove('selected')); }
 
     async function deleteSelectedPhotos() {
@@ -501,7 +526,9 @@
       const modal = document.getElementById('authModal');
       modal.style.display = 'flex';
       
-      // ✅ लॉगिन और रजिस्टर मोड के हिसाब से सही टेक्स्ट और बटन
+      // यदि यूजर लॉगड-इन है, तभी क्लोज बटन दिखाएं, अन्यथा लॉगआउट स्थिति में उसे लॉगिन करना अनिवार्य रखें
+      document.getElementById('closeAuthBtn').style.display = memorySessionAuth ? 'block' : 'none';
+      
       document.getElementById('authTitle').innerText = login ? "Login Account" : "Set Security Password";
       document.getElementById('authSubTitle').innerText = login ? "Enter your ID and password to access your secure cloud." : "Secure your private cloud account with a secret password.";
       document.getElementById('authBtn').innerText = login ? "Login" : "Set Password";
@@ -512,7 +539,14 @@
       document.getElementById('authBtn').classList.remove('valid-btn');
     }
 
-    function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+    function closeAuthModal() {
+      if (!memorySessionAuth) {
+        showToast("Please login or register first!", "error");
+        return;
+      }
+      document.getElementById('authModal').style.display = 'none';
+    }
+
     function openLoginModal() { showAuthPopup(true); }
     function toggleAuthMode() { showAuthPopup(!isLoginMode); }
 
@@ -534,7 +568,7 @@
         if (data.success) {
           localStorage.setItem('device_5digit_code', device_id);
           memorySessionAuth = true; 
-          closeAuthModal();
+          document.getElementById('authModal').style.display = 'none';
           initUser(); 
           showToast(isLoginMode ? "Login successful!" : "Account secured!", "success");
         } else {
