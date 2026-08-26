@@ -147,9 +147,9 @@
   </div>
 
   <!-- Image Zoom Modal -->
-  <div class="modal" id="imgModal">
+  <div class="modal" id="imgModal" onclick="closeZoom()">
     <button class="close-modal" onclick="closeZoom()">✕</button>
-    <div class="modal-content-container">
+    <div class="modal-content-container" onclick="event.stopPropagation()">
       <img id="fullImg" src="" alt="Full view">
       <div class="modal-date" id="modalDate"></div>
     </div>
@@ -200,7 +200,9 @@
     let selectedPhotoIds = new Set();
     let isSelectionMode = false;
     let currentTab = 'gallery';
-    let memorySessionAuth = false;
+    
+    // sessionStorage का उपयोग किया ताकि पेज रिफ्रेश होने पर बार-बार लॉगआउट न हो
+    let memorySessionAuth = sessionStorage.getItem('is_authenticated') === 'true';
 
     let allPhotosData = [];
     let displayedCount = 0;
@@ -281,7 +283,7 @@
       document.getElementById('secStatus').innerHTML = memorySessionAuth ? `Secured <i class="fa-solid fa-lock"></i>` : `Guest <i class="fa-solid fa-unlock"></i>`;
       
       container.innerHTML = memorySessionAuth 
-        ? `${currentTab==='gallery' ? '<button class="circle-btn upload-btn" onclick="triggerUpload()"><i class="fa-solid fa-plus"></i></button>' : ''}<button class="circle-btn logout-icon-btn" onclick="showLogoutWarning()"><i class="fa-solid fa-power-off"></i></button>`
+        ? `${currentTab==='gallery' ? '<button class="circle-btn upload-btn" onclick="triggerUpload()"><i class="fa-solid fa-plus"></i></button>':''}<button class="circle-btn logout-icon-btn" onclick="showLogoutWarning()"><i class="fa-solid fa-power-off"></i></button>`
         : `<button class="circle-btn" onclick="openLoginModal()"><i class="fa-solid fa-key"></i></button>`;
     }
 
@@ -293,13 +295,12 @@
       updateHeaderButtons();
       
       if (!memorySessionAuth) {
-        // अगर लॉगआउट है, तो सीधे Login/Register स्क्रीन दिखाएं और गैलरी खाली रखें
         allPhotosData = [];
         document.getElementById('gallery').innerHTML = "";
         document.getElementById('notesList').innerHTML = "";
         document.getElementById('notesCountTitle').innerText = `Saved Notes (0)`;
         document.getElementById('avatarDisplay').innerText = "CH";
-        showAuthPopup(true); // सीधा लॉगिन पेज खोलें
+        showAuthPopup(true);
       } else {
         fetchProfilePhoto(devId);
         fetchGallery(devId);
@@ -313,10 +314,24 @@
       photosToRender.forEach(p => {
         const card = document.createElement('div');
         card.className = 'gallery-card' + (selectedPhotoIds.has(p.id) ? ' selected' : '');
-        const dateObj = p.date ? new Date(p.date * 1000) : new Date();
-        const formattedDate = dateObj.toLocaleDateString('en-GB') + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        // सही तरीके से API से आने वाली तारीख को फ़ॉर्मेट करना
+        let formattedDate = "N/A";
+        if (p.date) {
+          const dateObj = typeof p.date === 'number' ? new Date(p.date * 1000) : new Date(p.date);
+          if (!isNaN(dateObj)) {
+            formattedDate = dateObj.toLocaleDateString('en-GB') + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          }
+        }
 
-        card.onclick = () => isSelectionMode ? toggleSelectPhoto(p.id, card) : openModal(p.url, formattedDate);
+        // सिंगल क्लिक करने पर फुल स्क्रीन ज़ूम खुलेगा
+        card.onclick = () => {
+          if (isSelectionMode) {
+            toggleSelectPhoto(p.id, card);
+          } else {
+            openModal(p.url, formattedDate);
+          }
+        };
         card.oncontextmenu = (e) => { e.preventDefault(); startSelectionMode(p.id, card); };
 
         card.innerHTML = `<img src="${p.url}" loading="lazy"><div class="photo-date">${formattedDate}</div>`;
@@ -391,7 +406,7 @@
     function openModal(url, dateStr) {
       if (!memorySessionAuth) return showAuthPopup(true);
       document.getElementById('fullImg').src = url;
-      document.getElementById('modalDate').innerText = "Uploaded: " + dateStr;
+      document.getElementById('modalDate').innerText = "Date: " + dateStr;
       document.getElementById('imgModal').style.display = 'flex';
     }
 
@@ -526,7 +541,6 @@
       const modal = document.getElementById('authModal');
       modal.style.display = 'flex';
       
-      // यदि यूजर लॉगड-इन है, तभी क्लोज बटन दिखाएं, अन्यथा लॉगआउट स्थिति में उसे लॉगिन करना अनिवार्य रखें
       document.getElementById('closeAuthBtn').style.display = memorySessionAuth ? 'block' : 'none';
       
       document.getElementById('authTitle').innerText = login ? "Login Account" : "Set Security Password";
@@ -568,6 +582,7 @@
         if (data.success) {
           localStorage.setItem('device_5digit_code', device_id);
           memorySessionAuth = true; 
+          sessionStorage.setItem('is_authenticated', 'true'); // सेशन को सुरक्षित रखना
           document.getElementById('authModal').style.display = 'none';
           initUser(); 
           showToast(isLoginMode ? "Login successful!" : "Account secured!", "success");
@@ -584,6 +599,7 @@
     
     function confirmLogout() {
       memorySessionAuth = false; 
+      sessionStorage.removeItem('is_authenticated'); // लॉगआउट पर सेशन हटाना
       closeLogoutConfirm();
       initUser(); 
       showToast("Logged out successfully", "info");
