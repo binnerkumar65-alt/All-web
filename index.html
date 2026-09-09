@@ -37,6 +37,8 @@
     .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .gallery-card { background: #161922; border-radius: 14px; overflow: hidden; position: relative; aspect-ratio: 1 / 1; border: 1px solid #232734; cursor: pointer; user-select: none; transition: transform 0.15s; }
     .gallery-card img, .gallery-card video { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-card img { display: block; background: #11141b; }
+    .gallery-card:active { transform: scale(0.98); }
     .video-icon-indicator { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); color: #38bdf8; font-size: 0.7rem; padding: 3px 6px; border-radius: 4px; z-index: 2; }
     
     .photo-date { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.85)); font-size: 0.55rem; color: #cbd5e1; text-align: left; padding: 12px 6px 4px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -45,6 +47,7 @@
     
     .load-more-container { grid-column: 1 / -1; text-align: center; margin-top: 20px; }
     .load-more-btn { background: #161922; border: 1px solid #38bdf8; color: #38bdf8; padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .load-more-btn:disabled { opacity: 0.6; cursor: wait; }
 
     /* Upload Progress Overlay / Bar */
     .upload-progress-box { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: #161922; border: 1px solid #38bdf8; padding: 14px 18px; border-radius: 16px; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
@@ -130,7 +133,7 @@
         <div class="user-info">
           <h2 class="app-title">Cloud Hub</h2>
           <div class="status-badge">
-            ID: <span id="devCode">...</span> • <span class="secured" id="secStatus">Firebase Connected <i class="fa-solid fa-lock"></i></span>
+            ID: <span id="devCode">...</span> • <span class="secured" id="secStatus">Private Telegram <i class="fa-solid fa-lock"></i></span>
           </div>
         </div>
       </div>
@@ -247,14 +250,11 @@
     let isUploading = false;
 
     let loadedPhotosList = [];
-    let allFetchedRawData = [];
-    let currentIndex = 0;
+    let galleryPage = 0;
+    let galleryHasMore = false;
+    let galleryLoading = false;
+    let galleryTotal = 0;
     let currentModalIndex = 0;
-
-    // Heartbeat script to keep Render & Cleaner active when HTML is open
-    setInterval(() => {
-      fetch(`${API_BASE}/heartbeat`, { method: 'POST' }).catch(err => console.log("Heartbeat failed"));
-    }, 20000);
 
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
@@ -304,42 +304,133 @@
     }
 
     // Updated video check function using database flag & fallback URL check
+    function mediaUrl(url) {
+      if (!url) return "";
+
+      if (
+        url.startsWith("http://") ||
+        url.startsWith("https://")
+      ) {
+        return url;
+      }
+
+      // New Python API may store /api/media/ID
+      // as a relative path. Convert it to Render API URL.
+      if (url.startsWith("/api/")) {
+        return API_BASE + url.substring(4);
+      }
+
+      return url;
+    }
+
+    function videoThumbUrl(p) {
+      return `${API_BASE}/thumb/${encodeURIComponent(p.id)}`;
+    }
+
     function isVideoFile(p) {
       if (p.is_video === true) return true;
       if (!p.url) return false;
-      const cleanUrl = p.url.split('?')[0].toLowerCase();
-      return cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.ogg') || cleanUrl.endsWith('.mov') || cleanUrl.endsWith('.mkv') || cleanUrl.endsWith('.avi') || cleanUrl.endsWith('.3gp') || p.url.includes('video');
+
+      const cleanUrl =
+        p.url.split('?')[0].toLowerCase();
+
+      return (
+        cleanUrl.endsWith('.mp4') ||
+        cleanUrl.endsWith('.webm') ||
+        cleanUrl.endsWith('.ogg') ||
+        cleanUrl.endsWith('.mov') ||
+        cleanUrl.endsWith('.mkv') ||
+        cleanUrl.endsWith('.avi') ||
+        cleanUrl.endsWith('.3gp') ||
+        p.url.includes('video')
+      );
     }
 
-    function loadInitialData(targetId) {
+    async function loadInitialData(targetId) {
       if (!memorySessionAuth) return;
 
       const galleryContainer = document.getElementById('gallery');
-      galleryContainer.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading from Firebase...</p>";
+
+      galleryContainer.innerHTML = `
+        <p style='grid-column: 1/-1; text-align:center; color:#38bdf8;'>
+          <i class='fa-solid fa-spinner fa-spin'></i>
+          Loading gallery...
+        </p>
+      `;
 
       loadedPhotosList = [];
-      allFetchedRawData = [];
-      currentIndex = 0;
+      galleryPage = 0;
+      galleryHasMore = false;
+      galleryLoading = false;
+      galleryTotal = 0;
+      currentModalIndex = 0;
 
-      db.ref(`photos/${targetId}`).once('value', (snapshot) => {
-        const photos = snapshot.val();
-        if (!photos) {
-          galleryContainer.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>No media found.</p>";
-          return;
-        }
-
-        allFetchedRawData = Object.values(photos).reverse();
-        loadMoreItems();
-      });
+      await loadMoreItems(targetId, true);
 
       loadNotes(targetId);
     }
 
-    function loadMoreItems() {
-      const nextBatch = allFetchedRawData.slice(currentIndex, currentIndex + 12);
-      loadedPhotosList = loadedPhotosList.concat(nextBatch);
-      currentIndex += 12;
-      renderGalleryList();
+    async function loadMoreItems(targetId = DEVICE_ID(), firstLoad = false) {
+      if (!memorySessionAuth || galleryLoading) return;
+
+      if (!firstLoad && !galleryHasMore) return;
+
+      galleryLoading = true;
+
+      try {
+        const nextPage = firstLoad ? 1 : galleryPage + 1;
+
+        const url =
+          `${API_BASE}/gallery` +
+          `?device_id=${encodeURIComponent(targetId)}` +
+          `&page=${nextPage}` +
+          `&limit=12`;
+
+        const res = await fetch(url, {
+          method: 'GET',
+          cache: 'no-store'
+        });
+
+        if (!res.ok) {
+          throw new Error(`Gallery HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (firstLoad) {
+          loadedPhotosList = [];
+        }
+
+        const newItems = Array.isArray(data.photos)
+          ? data.photos
+          : [];
+
+        loadedPhotosList = loadedPhotosList.concat(newItems);
+
+        galleryPage = nextPage;
+        galleryHasMore = !!data.has_more;
+        galleryTotal = Number(data.total || 0);
+
+        renderGalleryList();
+
+      } catch (err) {
+        console.error("Gallery load error:", err);
+
+        const galleryContainer = document.getElementById('gallery');
+
+        if (loadedPhotosList.length === 0) {
+          galleryContainer.innerHTML = `
+            <p style='grid-column: 1/-1; text-align:center; color:#f87171;'>
+              Unable to load gallery.
+            </p>
+          `;
+        } else {
+          showToast("Unable to load more files!", "error");
+        }
+
+      } finally {
+        galleryLoading = false;
+      }
     }
 
     function loadNotes(targetId) {
@@ -373,24 +464,85 @@
       galleryContainer.innerHTML = "";
 
       if (loadedPhotosList.length === 0) {
-        galleryContainer.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>No media found.</p>";
+        galleryContainer.innerHTML = `
+          <p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>
+            No media found.
+          </p>
+        `;
         return;
       }
 
       loadedPhotosList.forEach((p, index) => {
         const card = document.createElement('div');
-        card.className = 'gallery-card' + (selectedPhotoIds.has(p.id) ? ' selected' : '');
-        
+
+        card.className =
+          'gallery-card' +
+          (selectedPhotoIds.has(p.id) ? ' selected' : '');
+
         let formattedDate = "Synced";
+
         if (p.date) {
           const dateObj = new Date(p.date);
+
           if (!isNaN(dateObj)) {
-            formattedDate = dateObj.toLocaleDateString('en-GB') + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            formattedDate =
+              dateObj.toLocaleDateString('en-GB') +
+              " " +
+              dateObj.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              });
           }
         }
 
         const isVideo = isVideoFile(p);
 
+        // --------------------------------------------------
+        // IMPORTANT:
+        // Do NOT put <video src=""> inside gallery cards.
+        // Only load a small Telegram thumbnail.
+        // --------------------------------------------------
+
+        const img = document.createElement('img');
+
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.alt = '';
+
+        if (isVideo) {
+          img.src = `${API_BASE}/thumb/${encodeURIComponent(p.id)}`;
+        } else {
+          img.src = mediaUrl(p.url);
+        }
+
+        img.onerror = () => {
+          img.style.display = 'none';
+        };
+
+        card.appendChild(img);
+
+        if (isVideo) {
+          const videoIcon =
+            document.createElement('div');
+
+          videoIcon.className =
+            'video-icon-indicator';
+
+          videoIcon.innerHTML =
+            '<i class="fa-solid fa-video"></i>';
+
+          card.appendChild(videoIcon);
+        }
+
+        const dateDiv =
+          document.createElement('div');
+
+        dateDiv.className = 'photo-date';
+        dateDiv.innerText = formattedDate;
+
+        card.appendChild(dateDiv);
+
+        // Normal click = open media
         card.onclick = () => {
           if (isSelectionMode) {
             toggleSelectPhoto(p.id, card);
@@ -399,34 +551,67 @@
           }
         };
 
+        // Desktop right click = selection
         card.oncontextmenu = (e) => {
           e.preventDefault();
           startSelectionMode(p.id, card);
         };
 
+        // Mobile long press = selection
         let pressTimer;
+
         card.ontouchstart = () => {
           pressTimer = setTimeout(() => {
             startSelectionMode(p.id, card);
           }, 600);
         };
-        card.ontouchend = () => clearTimeout(pressTimer);
 
-        let mediaElement = '';
-        if (isVideo) {
-          mediaElement = `<div class="video-icon-indicator"><i class="fa-solid fa-video"></i></div><video src="${p.url}" muted preload="metadata"></video>`;
-        } else {
-          mediaElement = `<img src="${p.url}" loading="lazy">`;
-        }
+        card.ontouchend = () => {
+          clearTimeout(pressTimer);
+        };
 
-        card.innerHTML = `${mediaElement}<div class="photo-date">${formattedDate}</div>`;
+        card.ontouchmove = () => {
+          clearTimeout(pressTimer);
+        };
+
         galleryContainer.appendChild(card);
       });
 
-      if (currentIndex < allFetchedRawData.length) {
-        const loadMoreDiv = document.createElement('div');
-        loadMoreDiv.className = 'load-more-container';
-        loadMoreDiv.innerHTML = `<button class="load-more-btn" onclick="loadMoreItems()">Load More (${allFetchedRawData.length - currentIndex} remaining)</button>`;
+      // --------------------------------------------------
+      // LOAD MORE
+      // --------------------------------------------------
+
+      if (galleryHasMore) {
+        const loadMoreDiv =
+          document.createElement('div');
+
+        loadMoreDiv.className =
+          'load-more-container';
+
+        const remaining =
+          Math.max(
+            0,
+            galleryTotal - loadedPhotosList.length
+          );
+
+        const button =
+          document.createElement('button');
+
+        button.className =
+          'load-more-btn';
+
+        button.innerHTML =
+          galleryLoading
+            ? '<i class="fa-solid fa-spinner fa-spin"></i> Loading...'
+            : `Load More${remaining ? ` (${remaining} remaining)` : ''}`;
+
+        button.disabled = galleryLoading;
+
+        button.onclick = () => {
+          loadMoreItems(DEVICE_ID(), false);
+        };
+
+        loadMoreDiv.appendChild(button);
         galleryContainer.appendChild(loadMoreDiv);
       }
     }
@@ -439,79 +624,275 @@
     }
 
     function renderModalContent() {
-      const loadMoreScreen = document.getElementById('modalLoadMoreScreen');
-      const prevBtn = document.getElementById('modalPrevBtn');
-      const nextBtn = document.getElementById('modalNextBtn');
-      const modalDate = document.getElementById('modalDate');
-      const modalDeleteBtn = document.getElementById('modalDeleteBtn');
-      
-      const container = document.getElementById('modalContentContainer');
-      const existingMedia = container.querySelector('img, video');
-      if (existingMedia) existingMedia.remove();
+      const loadMoreScreen =
+        document.getElementById('modalLoadMoreScreen');
 
+      const prevBtn =
+        document.getElementById('modalPrevBtn');
+
+      const nextBtn =
+        document.getElementById('modalNextBtn');
+
+      const modalDate =
+        document.getElementById('modalDate');
+
+      const modalDeleteBtn =
+        document.getElementById('modalDeleteBtn');
+
+      const container =
+        document.getElementById('modalContentContainer');
+
+      // Stop and remove old media
+      const existingMedia =
+        container.querySelector('img, video');
+
+      if (existingMedia) {
+        if (existingMedia.tagName === 'VIDEO') {
+          try {
+            existingMedia.pause();
+            existingMedia.removeAttribute('src');
+            existingMedia.load();
+          } catch (e) {
+            console.log(e);
+          }
+        }
+
+        existingMedia.remove();
+      }
+
+      // Reached the end of currently loaded items
       if (currentModalIndex >= loadedPhotosList.length) {
-        loadMoreScreen.style.display = 'flex';
+
+        if (galleryHasMore) {
+          loadMoreScreen.style.display = 'flex';
+        } else {
+          loadMoreScreen.style.display = 'flex';
+          loadMoreScreen.querySelector('h3').innerText =
+            'No more media available';
+
+          loadMoreScreen.querySelector('button').style.display =
+            'none';
+        }
+
         modalDate.style.display = 'none';
         modalDeleteBtn.style.display = 'none';
-        prevBtn.style.display = 'flex';
+
+        prevBtn.style.display =
+          loadedPhotosList.length > 0
+            ? 'flex'
+            : 'none';
+
         nextBtn.style.display = 'none';
+
         return;
       }
 
       loadMoreScreen.style.display = 'none';
+
+      // Restore load-more button text
+      const loadButton =
+        loadMoreScreen.querySelector('button');
+
+      if (loadButton) {
+        loadButton.style.display =
+          galleryHasMore ? 'block' : 'none';
+
+        loadButton.innerHTML =
+          '<i class="fa-solid fa-rotate"></i> Load More Photos';
+      }
+
       modalDate.style.display = 'block';
       modalDeleteBtn.style.display = 'flex';
-      prevBtn.style.display = 'flex';
-      nextBtn.style.display = 'flex';
 
-      const p = loadedPhotosList[currentModalIndex];
+      prevBtn.style.display =
+        currentModalIndex > 0
+          ? 'flex'
+          : 'none';
+
+      nextBtn.style.display =
+        currentModalIndex <
+        loadedPhotosList.length
+          ? 'flex'
+          : 'none';
+
+      const p =
+        loadedPhotosList[currentModalIndex];
+
       if (!p) return;
 
       let formattedDate = "Synced";
+
       if (p.date) {
         const dateObj = new Date(p.date);
+
         if (!isNaN(dateObj)) {
-          formattedDate = dateObj.toLocaleDateString('en-GB') + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          formattedDate =
+            dateObj.toLocaleDateString('en-GB') +
+            " " +
+            dateObj.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            });
         }
       }
 
       const isVideo = isVideoFile(p);
+
       if (isVideo) {
-        const vid = document.createElement('video');
-        vid.src = p.url;
+
+        const vid =
+          document.createElement('video');
+
+        // IMPORTANT:
+        // Full video is requested only after click.
+        // Browser will use HTTP Range requests.
+        vid.src = mediaUrl(p.url);
+
         vid.controls = true;
         vid.autoplay = true;
-        container.insertBefore(vid, modalDate);
+        vid.playsInline = true;
+        vid.preload = 'metadata';
+
+        vid.setAttribute(
+          'playsinline',
+          ''
+        );
+
+        vid.setAttribute(
+          'webkit-playsinline',
+          ''
+        );
+
+        vid.style.maxWidth = '100%';
+        vid.style.maxHeight = '90vh';
+        vid.style.width = '100%';
+
+        container.insertBefore(
+          vid,
+          modalDate
+        );
+
+        vid.play().catch(() => {
+          // Browser may block autoplay.
+        });
+
       } else {
-        const img = document.createElement('img');
-        img.src = p.url;
-        container.insertBefore(img, modalDate);
+
+        const img =
+          document.createElement('img');
+
+        img.src = mediaUrl(p.url);
+        img.loading = 'eager';
+        img.decoding = 'async';
+
+        container.insertBefore(
+          img,
+          modalDate
+        );
       }
 
-      modalDate.innerText = "Date: " + formattedDate;
+      modalDate.innerText =
+        "Date: " + formattedDate;
     }
 
+
     function navigateModal(direction) {
-      currentModalIndex += direction;
-      if (currentModalIndex < 0) currentModalIndex = 0;
-      else if (currentModalIndex > loadedPhotosList.length) currentModalIndex = loadedPhotosList.length;
+
+      let nextIndex =
+        currentModalIndex + direction;
+
+      if (nextIndex < 0) {
+        nextIndex = 0;
+      }
+
+      // Allow exactly one position after last
+      // so the Load More screen appears.
+      if (
+        nextIndex >
+        loadedPhotosList.length
+      ) {
+        nextIndex =
+          loadedPhotosList.length;
+      }
+
+      currentModalIndex =
+        nextIndex;
+
       renderModalContent();
     }
 
-    function modalLoadMoreAction() {
-      if (currentIndex < allFetchedRawData.length) {
-        loadMoreItems();
-        currentModalIndex = loadedPhotosList.length - 1;
+
+    async function modalLoadMoreAction() {
+
+      if (!galleryHasMore) {
+        return;
+      }
+
+      const oldLength =
+        loadedPhotosList.length;
+
+      await loadMoreItems(
+        DEVICE_ID(),
+        false
+      );
+
+      if (
+        loadedPhotosList.length >
+        oldLength
+      ) {
+        currentModalIndex =
+          oldLength;
+
         renderModalContent();
-        showToast("Loaded 12 more files!", "success");
+
+        showToast(
+          "Loaded 12 more files!",
+          "success"
+        );
       }
     }
 
+
     function closeZoom() {
-      const container = document.getElementById('modalContentContainer');
-      const vid = container.querySelector('video');
-      if (vid) vid.pause();
-      document.getElementById('imgModal').style.display = 'none';
+
+      const container =
+        document.getElementById(
+          'modalContentContainer'
+        );
+
+      const vid =
+        container.querySelector('video');
+
+      if (vid) {
+        try {
+          vid.pause();
+
+          // Release temporary playback buffer
+          vid.removeAttribute('src');
+          vid.load();
+
+        } catch (e) {
+          console.log(e);
+        }
+      }
+
+      const img =
+        container.querySelector('img');
+
+      if (img) {
+        img.removeAttribute('src');
+      }
+
+      const media =
+        container.querySelector('img, video');
+
+      if (media) {
+        media.remove();
+      }
+
+      document.getElementById(
+        'imgModal'
+      ).style.display = 'none';
     }
 
     let touchStartX = 0;
@@ -520,7 +901,7 @@
     modalElement.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
     modalElement.addEventListener('touchend', e => { 
       touchEndX = e.changedTouches[0].screenX;
-      if (touchEndX < touchStartX - 50 && currentModalIndex < loadedPhotosList.length) navigateModal(1);
+      if (touchEndX < touchStartX - 50 && currentModalIndex <= loadedPhotosList.length) navigateModal(1);
       if (touchEndX > touchStartX + 50) navigateModal(-1);
     }, false);
 
