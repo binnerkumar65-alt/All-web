@@ -1,1565 +1,833 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RoomFinder PRO - Student & Owner Hub</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-dark: #0D0F17;
-      --surface: #16192B;
-      --surface-elevated: #1E2238;
-      --border: #2E3459;
-      --border-subtle: #232742;
-      --primary: #6366F1;
-      --primary-hover: #4F46E5;
-      --primary-light: #818CF8;
-      --success: #10B981;
-      --success-light: #34D399;
-      --warning: #F59E0B;
-      --danger: #EF4444;
-      --text-primary: #FFFFFF;
-      --text-secondary: #CBD5E1;
-      --text-muted: #94A3B8;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-primary);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .app-container {
-      width: 100%;
-      max-width: 600px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding-bottom: 40px;
-    }
-
-    /* Header */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: rgba(13, 15, 23, 0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .brand-icon {
-      width: 38px;
-      height: 38px;
-      background: var(--primary);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
-    }
-
-    .brand-icon svg {
-      width: 22px;
-      height: 22px;
-      fill: #fff;
-    }
-
-    .brand-title {
-      font-size: 17px;
-      font-weight: 800;
-      letter-spacing: 0.3px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .pro-badge {
-      background: #1E1B4B;
-      color: var(--primary-light);
-      border: 1px solid #3730A3;
-      font-size: 9px;
-      font-weight: 800;
-      padding: 1px 5px;
-      border-radius: 4px;
-      letter-spacing: 0.5px;
-    }
-
-    .brand-sub {
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-
-    /* Tabs Switch */
-    .tabs-switch {
-      display: flex;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 3px;
-      gap: 3px;
-    }
-
-    .tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 6px 12px;
-      border-radius: 9px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.2s ease;
-    }
-
-    .tab-btn.active {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
-    }
-
-    .tab-btn svg {
-      width: 14px;
-      height: 14px;
-      fill: currentColor;
-    }
-
-    /* Content Pages */
-    .page {
-      display: none;
-      padding: 16px;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .page.active {
-      display: flex;
-    }
-
-    /* Search & Filter Bar */
-    .search-box {
-      position: relative;
-      width: 100%;
-    }
-
-    .search-input {
-      width: 100%;
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px 14px 12px 42px;
-      color: var(--text-primary);
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .search-input:focus {
-      border-color: var(--primary);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 18px;
-      height: 18px;
-      fill: var(--primary-light);
-    }
-
-    .filter-chips {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: none;
-    }
-
-    .filter-chips::-webkit-scrollbar {
-      display: none;
-    }
-
-    .chip {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      padding: 6px 14px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .chip.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-    }
-
-    /* Section Header */
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 4px;
-    }
-
-    .section-title {
-      font-size: 14px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-primary);
-    }
-
-    .btn-refresh {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--primary-light);
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      transition: background 0.2s;
-    }
-
-    .btn-refresh:hover {
-      background: var(--surface-elevated);
-    }
-
-    /* Room Cards */
-    .rooms-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .room-card {
-      background: var(--surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 18px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .room-card:hover {
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-    }
-
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .verified-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(99, 102, 241, 0.18);
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      color: var(--primary-light);
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2.5px 7px;
-      border-radius: 6px;
-      margin-bottom: 6px;
-    }
-
-    .status-pill {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2.5px 7px;
-      border-radius: 6px;
-      margin-left: 6px;
-    }
-
-    .status-active {
-      background: rgba(16, 185, 129, 0.2);
-      color: var(--success-light);
-    }
-
-    .status-paused {
-      background: rgba(245, 158, 11, 0.2);
-      color: var(--warning);
-    }
-
-    .card-title {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .card-location {
-      font-size: 12px;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 3px;
-    }
-
-    .card-price-box {
-      text-align: right;
-    }
-
-    .card-price {
-      font-size: 19px;
-      font-weight: 800;
-      color: var(--primary-light);
-    }
-
-    .card-price-sub {
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-
-    /* Photo Carousel Container with Protective Mask Layer */
-    .carousel-box {
-      position: relative;
-      width: 100%;
-      height: 230px;
-      border-radius: 14px;
-      background: var(--surface-elevated);
-      overflow: hidden;
-    }
-
-    .carousel-slides {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      transition: transform 0.3s ease;
-    }
-
-    .carousel-slide {
-      min-width: 100%;
-      height: 100%;
-      position: relative;
-      background: #000;
-    }
-
-    .carousel-slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    /* CRITICAL REQUIREMENT IMPLEMENTATION:
-       Protective dark scrim layer placed over the photo bottom.
-       It permanently shields any device ID, watermark, or bottom footer text
-       so that it is NEVER visible to anyone! */
-    .carousel-protective-layer {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 72px;
-      background: linear-gradient(to top, #0D0F17 0%, rgba(13, 15, 23, 0.85) 50%, transparent 100%);
-      pointer-events: none;
-      z-index: 3;
-    }
-
-    .carousel-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0, 0, 0, 0.65);
-      border: none;
-      color: #fff;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 5;
-    }
-
-    .carousel-prev { left: 8px; }
-    .carousel-next { right: 8px; }
-
-    .carousel-dots {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 5px;
-      z-index: 5;
-    }
-
-    .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 3px;
-      background: rgba(255, 255, 255, 0.4);
-      transition: all 0.2s;
-    }
-
-    .dot.active {
-      width: 16px;
-      background: #fff;
-    }
-
-    .carousel-badge {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 12px;
-      z-index: 5;
-    }
-
-    /* Details container */
-    .card-details {
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px;
-      font-size: 12px;
-      line-height: 1.4;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    /* Action buttons */
-    .card-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 4px;
-    }
-
-    .action-group {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-call {
-      background: var(--success);
-      color: #fff;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .btn-call:hover {
-      background: #059669;
-    }
-
-    .btn-wa {
-      background: transparent;
-      border: 1px solid rgba(52, 211, 153, 0.5);
-      color: var(--success-light);
-      padding: 8px 14px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .btn-wa:hover {
-      background: rgba(16, 185, 129, 0.1);
-    }
-
-    .btn-icon {
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    /* Owner Screen Styles */
-    .owner-auth-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin-top: 30px;
-    }
-
-    .auth-icon-circle {
-      width: 56px;
-      height: 56px;
-      background: rgba(99, 102, 241, 0.15);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .auth-icon-circle svg {
-      width: 28px;
-      height: 28px;
-      fill: var(--primary-light);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 14px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      transition: background 0.2s;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-    }
-
-    .owner-profile-bar {
-      background: var(--surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .btn-logout {
-      background: transparent;
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: var(--danger);
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    /* Form Card */
-    .form-card {
-      background: var(--surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 20px;
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .form-label {
-      font-size: 12px;
-      color: var(--text-secondary);
-      font-weight: 600;
-    }
-
-    .form-input, .form-textarea {
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 14px;
-      color: #fff;
-      font-size: 13px;
-      outline: none;
-    }
-
-    .form-input:focus, .form-textarea:focus {
-      border-color: var(--primary);
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    /* Photo Drop Zone */
-    .photo-drop-zone {
-      border: 1px dashed rgba(99, 102, 241, 0.5);
-      background: var(--surface-elevated);
-      border-radius: 14px;
-      padding: 18px;
-      text-align: center;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .photo-drop-zone svg {
-      width: 32px;
-      height: 32px;
-      fill: var(--primary-light);
-    }
-
-    .photo-previews {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      margin-top: 4px;
-    }
-
-    .photo-thumb {
-      position: relative;
-      width: 70px;
-      height: 70px;
-      border-radius: 10px;
-      overflow: hidden;
-      flex-shrink: 0;
-      border: 1px solid var(--border);
-    }
-
-    .photo-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .btn-remove-thumb {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: rgba(0, 0, 0, 0.7);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      font-size: 11px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* Upload Progress Box */
-    .progress-box {
-      background: var(--surface-elevated);
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      border-radius: 14px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      text-align: center;
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 6px;
-      background: #1E2238;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--primary);
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    /* Modal Dialog */
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .modal-backdrop.active {
-      display: flex;
-    }
-
-    .modal-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 24px;
-      width: 100%;
-      max-width: 420px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .btn-close {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-    }
-
-    .toggle-auth-prompt {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-secondary);
-      cursor: pointer;
-    }
-
-    .toggle-auth-prompt span {
-      color: var(--primary-light);
-      font-weight: 700;
-    }
-
-    .empty-state {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 32px 20px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .empty-state svg {
-      width: 44px;
-      height: 44px;
-      fill: var(--text-muted);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoomFinder PRO - Student & Owner Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script async src="https://telegram.org/js/telegram-widget.js?24"></script>
+    <style>
+        body { background-color: #0d0f17; color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .custom-card { background: #16192b; border: 1px solid #232742; }
+        .custom-input { background: #1e2238; border: 1px solid #2e3459; color: #fff; }
+        .custom-input:focus { border-color: #6366f1; outline: none; }
+        .drop-zone { border: 2px dashed #4f46e5; border-radius: 12px; padding: 20px; cursor: pointer; transition: 0.3s; background: #1e2238; }
+        .drop-zone:hover { background: #232742; border-color: #6366f1; }
+        .toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast { background: #1e2238; color: #fff; padding: 10px 18px; border-radius: 30px; font-size: 0.78rem; font-weight: 600; border: 1px solid #2e3459; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .toast.success { border-color: #22c55e; color: #4ade80; }
+        .toast.error { border-color: #ef4444; color: #fca5a5; }
+        .toast.info { border-color: #6366f1; color: #a5b4fc; }
+
+        /* ---- Photo Carousel (multiple room photos) ---- */
+        .carousel-wrap { position: relative; overflow: hidden; border-radius: 14px; background: #1e2238; height: 220px; }
+        .carousel-track { display: flex; height: 100%; transition: transform 0.3s ease; }
+        .carousel-slide { flex: 0 0 100%; min-width: 100%; height: 100%; }
+        .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.55); color: #fff; border: none; width: 30px; height: 30px; border-radius: 50%; z-index: 20; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+        .carousel-btn:hover { background: rgba(79,70,229,0.85); }
+        .carousel-btn.prev { left: 8px; }
+        .carousel-btn.next { right: 8px; }
+        .carousel-dots { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; z-index: 20; }
+        .carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: 0.2s; }
+        .carousel-dot.active { background: #fff; width: 14px; border-radius: 3px; }
+
+        /* ---- Telegram embed: header/branding crop + click-block + fixed smooth height ---- */
+        .tg-embed-box { position: relative; overflow: hidden; border-radius: 14px; background: #1e2238; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .tg-embed-box iframe { margin-top: -56px !important; width: 100% !important; min-height: 276px !important; }
+        .tg-embed-box::after { content: ""; position: absolute; inset: 0; z-index: 10; background: transparent; }
+        .tg-embed-box::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 42px; background: #1e2238; z-index: 11; border-radius: 0 0 14px 14px; }
+        .preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+        .preview-grid img { width: 100%; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #2e3459; }
+    </style>
 </head>
-<body>
+<body class="min-h-screen pb-12">
 
-<div class="app-container">
-  <!-- App Header -->
-  <header>
-    <div class="brand">
-      <div class="brand-icon">
-        <svg viewBox="0 0 24 24"><path d="M17 11V3H7v4H3v14h18V11h-4zm-6-6h4v2h-4V5zm-4 4h4v2H7V9zm-2 4h4v2H5v-2zm0 4h4v2H5v-2zm14 2h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4v-2h4v2zm-6 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2z"/></svg>
-      </div>
-      <div>
-        <div class="brand-title">
-          RoomFinder <span class="pro-badge">PRO</span>
-        </div>
-        <div class="brand-sub">Student & Owner Hub</div>
-      </div>
-    </div>
+    <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Segmented Tab Switch -->
-    <div class="tabs-switch">
-      <button class="tab-btn active" id="tabBtnStudents" onclick="switchTab('students')">
-        <svg viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3 1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
-        स्टूडेंट्स
-      </button>
-      <button class="tab-btn" id="tabBtnOwners" onclick="switchTab('owners')">
-        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-        रूम ओनर
-      </button>
-    </div>
-  </header>
-
-  <!-- ================= STUDENTS PAGE ================= -->
-  <section class="page active" id="pageStudents">
-    <!-- Search Bar -->
-    <div class="search-box">
-      <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      <input type="text" class="search-input" id="studentSearchInput" placeholder="कमरा, एरिया या शहर खोजें (उदा: Boring Road)" oninput="filterRooms()">
-    </div>
-
-    <!-- Budget Filters -->
-    <div class="filter-chips">
-      <div class="chip active" onclick="setBudgetFilter(null, this)">सभी (All)</div>
-      <div class="chip" onclick="setBudgetFilter(3000, this)">₹3,000 तक</div>
-      <div class="chip" onclick="setBudgetFilter(5000, this)">₹5,000 तक</div>
-      <div class="chip" onclick="setBudgetFilter(10000, this)">₹10,000 तक</div>
-    </div>
-
-    <!-- Section Header -->
-    <div class="section-header">
-      <div class="section-title">
-        <svg style="width:16px;height:16px;fill:var(--primary-light)" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        उपलब्ध कमरे (<span id="roomsCountText">0</span>)
-      </div>
-      <button class="btn-refresh" onclick="fetchRooms()">
-        <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-        रिफ्रेश करें
-      </button>
-    </div>
-
-    <!-- Rooms Container -->
-    <div class="rooms-list" id="roomsListContainer">
-      <div class="empty-state">कमरे लोड हो रहे हैं...</div>
-    </div>
-  </section>
-
-  <!-- ================= OWNER PAGE ================= -->
-  <section class="page" id="pageOwners">
-    <!-- Unauthenticated View -->
-    <div id="ownerAuthPrompt" class="owner-auth-card" style="display:none;">
-      <div class="auth-icon-circle">
-        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-      </div>
-      <h3 style="font-size:17px;font-weight:700">ओनर पोर्टल लॉगिन / रजिस्ट्रेशन</h3>
-      <p style="font-size:12px;color:var(--text-secondary);max-width:320px;line-height:1.5;">
-        अपने कमरे जोड़ने और मैनेज करने के लिए अपनी 5-Digit ID से लॉगिन या रजिस्टर करें।
-      </p>
-      <button class="btn-primary" style="margin-top:10px" onclick="openAuthModal(true)">
-        Login / Register करें
-      </button>
-    </div>
-
-    <!-- Authenticated Dashboard View -->
-    <div id="ownerDashboard" style="display:none; flex-direction:column; gap:16px;">
-      <!-- Profile Bar -->
-      <div class="owner-profile-bar">
-        <div>
-          <div style="font-size:11px;color:var(--text-muted)">लॉगिन ओनर आईडी</div>
-          <div style="font-size:16px;font-weight:700;color:var(--primary-light)" id="displayOwnerId">-----</div>
-        </div>
-        <button class="btn-logout" onclick="logoutOwner()">लॉग आउट</button>
-      </div>
-
-      <!-- Add / Edit Room Form -->
-      <div class="form-card">
-        <h4 style="font-size:15px;font-weight:700" id="formHeaderTitle">नया कमरा जोड़ें (Add Room)</h4>
-
-        <div class="form-group">
-          <label class="form-label">रूम शीर्षक (Room Title) *</label>
-          <input type="text" class="form-input" id="inputTitle" placeholder="उदा: Single Room for Student">
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">एरिया / लोकेशन *</label>
-            <input type="text" class="form-input" id="inputLocation" placeholder="उदा: Boring Road">
-          </div>
-          <div class="form-group">
-            <label class="form-label">किराया (₹ प्रति माह) *</label>
-            <input type="number" class="form-input" id="inputPrice" placeholder="उदा: 4500">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">संपर्क नंबर (Contact Number) *</label>
-          <input type="tel" class="form-input" id="inputPhone" placeholder="उदा: 9876543210">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">कमरे की पूरी जानकारी (Facilities / Details) *</label>
-          <textarea class="form-textarea" id="inputDetails" rows="3" placeholder="सुविधाएं: वाई-फाई, आरओ पानी, 24 घंटे बिजली..."></textarea>
-        </div>
-
-        <!-- Photo Picker -->
-        <div class="form-group">
-          <label class="form-label">कमरे की फोटो (1 से 4 फोटो) *</label>
-          <div class="photo-drop-zone" onclick="document.getElementById('photoFileInput').click()">
-            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-            <div style="font-size:13px;font-weight:600">गैलरी से फोटो चुनें</div>
-            <div style="font-size:11px;color:var(--text-muted)">Click to choose up to 4 images</div>
-          </div>
-          <input type="file" id="photoFileInput" multiple accept="image/*" style="display:none" onchange="handlePhotosSelected(event)">
-          <div class="photo-previews" id="photoPreviewsBox"></div>
-        </div>
-
-        <!-- Upload Progress State -->
-        <div class="progress-box" id="uploadProgressBox" style="display:none;">
-          <div style="font-size:12px;font-weight:600" id="uploadStatusText">अपलोड हो रहा है...</div>
-          <div class="progress-bar">
-            <div class="progress-fill" id="uploadProgressFill"></div>
-          </div>
-          <div style="font-size:11px;color:var(--text-muted)" id="uploadSubText">कृपया प्रतीक्षा करें</div>
-        </div>
-
-        <!-- Submit Buttons -->
-        <div style="display:flex;gap:8px">
-          <button class="btn-primary" id="btnSubmitRoom" onclick="submitRoomForm()">
-            पब्लिश करें (Publish Room) 🚀
-          </button>
-          <button class="btn-logout" id="btnCancelEdit" style="display:none;" onclick="resetForm()">
-            रद्द करें
-          </button>
-        </div>
-      </div>
-
-      <!-- My Listings Section -->
-      <div class="section-header">
-        <div class="section-title">मेरे जोड़े गए कमरे (<span id="ownerRoomsCountText">0</span>)</div>
-      </div>
-      <div class="rooms-list" id="ownerRoomsListContainer"></div>
-    </div>
-  </section>
-</div>
-
-<!-- ================= AUTH MODAL DIALOG ================= -->
-<div class="modal-backdrop" id="authModal">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h3 style="font-size:18px;font-weight:800" id="authModalTitle">Login Account</h3>
-      <button class="btn-close" onclick="closeAuthModal()">✕</button>
-    </div>
-    <p style="font-size:12px;color:var(--text-secondary);">
-      कमरे अपलोड व मैनेज करने के लिए अपना 5-Digit ID और पासवर्ड दर्ज करें।
-    </p>
-
-    <div class="form-group">
-      <label class="form-label">5 Digit ID</label>
-      <input type="number" class="form-input" id="authDeviceId" placeholder="उदा: 48213" maxlength="5">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input type="password" class="form-input" id="authPassword" placeholder="पासवर्ड दर्ज करें">
-    </div>
-
-    <div id="authErrorMsg" style="color:var(--danger);font-size:12px;display:none;text-align:center;"></div>
-
-    <button class="btn-primary" id="btnAuthSubmit" onclick="submitAuth()">
-      Login
-    </button>
-
-    <div class="toggle-auth-prompt" onclick="toggleAuthMode()">
-      <span id="authToggleText">नया ID चाहिए? Register करें</span>
-    </div>
-  </div>
-</div>
-
-<!-- ================= JAVASCRIPT APP LOGIC ================= -->
-<script>
-  const FIREBASE_DB = "https://neetjee-ca8f5-default-rtdb.firebaseio.com/rooms";
-  const AUTH_API = "https://secret-ol9o.onrender.com/api";
-
-  let allRooms = [];
-  let selectedBudget = null;
-  let currentOwnerId = localStorage.getItem("rf_owner_id") || "";
-  let isLoginMode = true;
-  let selectedFiles = [];
-  let editingRoomId = null;
-  let existingEmbedCodes = [];
-
-  // Init App
-  window.addEventListener("DOMContentLoaded", () => {
-    updateOwnerUi();
-    fetchRooms();
-  });
-
-  // Switch Tab
-  function switchTab(tab) {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-
-    if (tab === "students") {
-      document.getElementById("tabBtnStudents").classList.add("active");
-      document.getElementById("pageStudents").classList.add("active");
-      fetchRooms();
-    } else {
-      document.getElementById("tabBtnOwners").classList.add("active");
-      document.getElementById("pageOwners").classList.add("active");
-      updateOwnerUi();
-    }
-  }
-
-  // Fetch Rooms from Firebase Realtime Database
-  async function fetchRooms() {
-    try {
-      const res = await fetch(`${FIREBASE_DB}.json`);
-      const data = await res.json();
-      allRooms = [];
-
-      if (data && typeof data === "object") {
-        for (const key of Object.keys(data)) {
-          const item = data[key];
-          if (item) {
-            allRooms.push({
-              id: key,
-              owner_id: item.owner_id ? String(item.owner_id) : "",
-              title: item.title || "",
-              location: item.location || "",
-              price: item.price ? String(item.price) : "0",
-              phone: item.phone ? String(item.phone) : "",
-              details: item.details || "",
-              embed_codes: Array.isArray(item.embed_codes) ? item.embed_codes : (item.embed_code ? [item.embed_code] : []),
-              status: item.status || "Active",
-              timestamp: item.timestamp || 0
-            });
-          }
-        }
-      }
-
-      // Sort newest first
-      allRooms.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-      renderStudentRooms();
-      renderOwnerRooms();
-    } catch (err) {
-      console.error("Failed to fetch rooms:", err);
-      document.getElementById("roomsListContainer").innerHTML = `
-        <div class="empty-state">
-          <div>कमरे लोड नहीं हो सके। इंटरनेट कनेक्शन जांचें।</div>
-          <button class="btn-refresh" onclick="fetchRooms()" style="margin-top:10px">दोबारा प्रयास करें</button>
-        </div>
-      `;
-    }
-  }
-
-  // Budget Filter
-  function setBudgetFilter(budget, el) {
-    selectedBudget = budget;
-    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
-    el.classList.add("active");
-    filterRooms();
-  }
-
-  // Filter Rooms
-  function filterRooms() {
-    renderStudentRooms();
-  }
-
-  // Extract direct high-res image URL from Telesco.pe or embed code
-  function resolvePhotoUrl(embedCode) {
-    if (!embedCode) return "";
-    if (embedCode.startsWith("http://") || embedCode.startsWith("https://")) {
-      return embedCode;
-    }
-    // Extract telegram post channel & ID: e.g. data-telegram-post="channel/123"
-    const match = embedCode.match(/data-telegram-post=["']([^"']+)["']/i);
-    if (match && match[1]) {
-      const parts = match[1].split("/");
-      if (parts.length >= 2) {
-        return `https://telesco.pe/i/${parts[0]}/${parts[1]}.jpg`;
-      }
-    }
-    return "";
-  }
-
-  // Render Students Rooms
-  function renderStudentRooms() {
-    const q = (document.getElementById("studentSearchInput").value || "").trim().toLowerCase();
-    const container = document.getElementById("roomsListContainer");
-
-    const filtered = allRooms.filter(r => {
-      const isActive = r.status.toLowerCase() !== "paused";
-      const matchesSearch = !q || r.title.toLowerCase().includes(q) || r.location.toLowerCase().includes(q) || r.details.toLowerCase().includes(q);
-      const parsedPrice = parseInt(r.price.replace(/\D/g, "")) || 0;
-      const matchesBudget = selectedBudget === null || parsedPrice <= selectedBudget;
-      return isActive && matchesSearch && matchesBudget;
-    });
-
-    document.getElementById("roomsCountText").innerText = filtered.length;
-
-    if (filtered.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-          <h4 style="font-size:15px;font-weight:700">कोई कमरा नहीं मिला</h4>
-          <p style="font-size:12px;color:var(--text-secondary)">कृपया बाद में देखें या सर्च फिल्टर बदलें।</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = filtered.map(room => buildRoomCardHtml(room, false)).join("");
-  }
-
-  // Build Room Card HTML with Device ID Masking & Photo Carousel
-  function buildRoomCardHtml(room, isOwner) {
-    const photos = room.embed_codes.map(resolvePhotoUrl).filter(u => u.length > 0);
-    const carouselId = `carousel_${room.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
-
-    let carouselHtml = "";
-    if (photos.length === 0) {
-      carouselHtml = `
-        <div class="carousel-box" style="display:flex;align-items:center;justify-content:center;">
-          <svg style="width:48px;height:48px;fill:#64748B" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-        </div>
-      `;
-    } else {
-      const slides = photos.map((p, idx) => `
-        <div class="carousel-slide">
-          <img src="${p}" alt="${room.title}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80'">
-          <!-- CRITICAL: Protective dark scrim layer that shields the bottom region so device ID is 100% hidden! -->
-          <div class="carousel-protective-layer"></div>
-        </div>
-      `).join("");
-
-      const dots = photos.length > 1 ? `
-        <div class="carousel-dots" id="dots_${carouselId}">
-          ${photos.map((_, idx) => `<div class="dot ${idx === 0 ? 'active' : ''}"></div>`).join("")}
-        </div>
-      ` : "";
-
-      const arrows = photos.length > 1 ? `
-        <button class="carousel-btn carousel-prev" onclick="slideCarousel('${carouselId}', -1, ${photos.length})">❮</button>
-        <button class="carousel-btn carousel-next" onclick="slideCarousel('${carouselId}', 1, ${photos.length})">❯</button>
-      ` : "";
-
-      carouselHtml = `
-        <div class="carousel-box" id="${carouselId}" data-index="0">
-          <div class="carousel-slides" id="slides_${carouselId}">
-            ${slides}
-          </div>
-          ${arrows}
-          ${dots}
-          <div class="carousel-badge" id="badge_${carouselId}">1 / ${photos.length}</div>
-        </div>
-      `;
-    }
-
-    const isPaused = room.status.toLowerCase() === "paused";
-    const statusBadge = isOwner ? `
-      <span class="status-pill ${isPaused ? 'status-paused' : 'status-active'}">${isPaused ? 'Paused' : 'Active'}</span>
-    ` : "";
-
-    const bottomRow = isOwner ? `
-      <div class="card-actions">
-        <div style="font-size:11px;color:var(--text-muted)">ID: ${room.owner_id}</div>
-        <div class="action-group">
-          <button class="btn-wa" onclick="editRoom('${room.id}')">✏️ Edit</button>
-          <button class="btn-wa" onclick="toggleStatus('${room.id}', '${room.status}')">${isPaused ? '▶ Active करें' : '⏸ Pause करें'}</button>
-          <button class="btn-logout" onclick="deleteRoom('${room.id}')">🗑 Delete</button>
-        </div>
-      </div>
-    ` : `
-      <div class="card-actions">
-        <div class="action-group">
-          <a href="tel:${room.phone}" class="btn-call">
-            <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-            ${room.phone || 'कॉल करें'}
-          </a>
-          <a href="https://api.whatsapp.com/send?phone=91${room.phone.replace(/\\D/g, '')}&text=${encodeURIComponent("नमस्ते, मुझे RoomFinder PRO पर आपका कमरा '" + room.title + "' पसंद आया। क्या यह उपलब्ध है?")}" target="_blank" class="btn-wa">
-            💬 WhatsApp
-          </a>
-        </div>
-        <button class="btn-icon" onclick="shareRoom('${room.title}', '${room.location}', '${room.price}')">
-          <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
-        </button>
-      </div>
-    `;
-
-    return `
-      <div class="room-card">
-        <div class="card-top">
-          <div>
-            <div style="display:flex;align-items:center;">
-              <span class="verified-pill">✓ Verified Room</span>
-              ${statusBadge}
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-[#0d0f17]/90 backdrop-blur border-b border-gray-800 px-4 py-3">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="bg-indigo-600 p-2 rounded-xl text-white">
+                    <i class="fa-solid fa-building"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-wide text-white">RoomFinder <span class="text-indigo-400 text-xs px-1.5 py-0.5 bg-indigo-950 rounded border border-indigo-800">PRO</span></h1>
+                    <p class="text-[11px] text-gray-400">Student & Owner Hub</p>
+                </div>
             </div>
-            <div class="card-title">${escapeHtml(room.title)}</div>
-            <div class="card-location">📍 ${escapeHtml(room.location)}</div>
-          </div>
-          <div class="card-price-box">
-            <div class="card-price">₹${escapeHtml(room.price)}</div>
-            <div class="card-price-sub">प्रति माह</div>
-          </div>
+            <div class="flex bg-[#16192b] p-1 rounded-xl border border-gray-800">
+                <button onclick="switchTab('student')" id="btn-student" class="px-4 py-1.5 rounded-lg text-xs font-medium transition bg-indigo-600 text-white shadow">
+                    <i class="fa-solid fa-graduation-cap mr-1"></i> स्टूडेंट्स
+                </button>
+                <button onclick="switchTab('owner')" id="btn-owner" class="px-4 py-1.5 rounded-lg text-xs font-medium transition text-gray-400">
+                    <i class="fa-solid fa-house-user mr-1"></i> रूम ओनर
+                </button>
+            </div>
         </div>
+    </header>
 
-        ${carouselHtml}
+    <main class="max-w-4xl mx-auto px-4 mt-6">
 
-        ${room.details ? `<div class="card-details">${escapeHtml(room.details)}</div>` : ''}
+        <!-- ================= STUDENT VIEW ================= -->
+        <section id="view-student" class="space-y-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-md font-semibold text-gray-200"><i class="fa-solid fa-magnifying-glass text-indigo-400 mr-2"></i>उपलब्ध कमरे (Available Rooms)</h2>
+                <button onclick="loadStudentListings()" class="text-xs bg-[#16192b] hover:bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-lg text-indigo-300">
+                    <i class="fa-solid fa-rotate mr-1"></i> रिफ्रेश करें
+                </button>
+            </div>
+            <div id="student-listings-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p class="text-gray-500 text-sm">कमरे लोड हो रहे हैं...</p>
+            </div>
+        </section>
 
-        ${bottomRow}
-      </div>
-    `;
-  }
+        <!-- ================= OWNER VIEW ================= -->
+        <section id="view-owner" class="hidden space-y-6">
 
-  // Slide Carousel
-  function slideCarousel(carouselId, direction, totalSlides) {
-    const el = document.getElementById(carouselId);
-    if (!el) return;
-    let idx = parseInt(el.getAttribute("data-index") || "0");
-    idx = (idx + direction + totalSlides) % totalSlides;
-    el.setAttribute("data-index", idx);
+            <!-- Auth Box (entry point -> opens Login/Register modal) -->
+            <div id="owner-auth-box" class="custom-card p-5 rounded-2xl shadow-lg">
+                <div class="text-center mb-4">
+                    <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-shield text-indigo-400 mr-2"></i>ओनर पोर्टल लॉगिन / रजिस्ट्रेशन</h3>
+                    <p class="text-xs text-gray-400 mt-1">अपने कमरे जोड़ने और मैनेज करने के लिए अपनी 5-Digit ID से लॉगिन करें।</p>
+                </div>
+                <div class="max-w-md mx-auto">
+                    <button onclick="openAuthModal(true)" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium transition shadow-lg">
+                        <i class="fa-solid fa-key mr-1"></i> Login / Register करें
+                    </button>
+                </div>
+            </div>
 
-    const slidesContainer = document.getElementById(`slides_${carouselId}`);
-    if (slidesContainer) {
-      slidesContainer.style.transform = `translateX(-${idx * 100}%)`;
-    }
+            <!-- Owner Dashboard -->
+            <div id="owner-dashboard" class="hidden space-y-6">
 
-    const badge = document.getElementById(`badge_${carouselId}`);
-    if (badge) {
-      badge.innerText = `${idx + 1} / ${totalSlides}`;
-    }
+                <div class="custom-card p-4 rounded-2xl flex justify-between items-center">
+                    <div>
+                        <span class="text-xs text-gray-400 block">लॉगिन ओनर आईडी</span>
+                        <span id="display-owner-id" class="text-indigo-400 font-bold text-base"></span>
+                    </div>
+                    <button onclick="showLogoutWarning()" class="border border-red-500/40 text-red-400 hover:bg-red-500/10 px-4 py-1.5 rounded-xl text-xs font-medium transition">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> लॉग आउट
+                    </button>
+                </div>
 
-    const dotsContainer = document.getElementById(`dots_${carouselId}`);
-    if (dotsContainer) {
-      dotsContainer.querySelectorAll(".dot").forEach((d, i) => {
-        d.classList.toggle("active", i === idx);
-      });
-    }
-  }
+                <!-- Add / Edit Room Form -->
+                <div class="custom-card p-5 rounded-2xl shadow-lg space-y-4">
+                    <h3 id="form-title-text" class="text-sm font-bold text-white flex items-center border-b border-gray-800 pb-3">
+                        <i class="fa-solid fa-circle-check text-indigo-400 mr-2"></i> नया कमरा जोड़ें
+                    </h3>
 
-  // Share room
-  function shareRoom(title, loc, price) {
-    const text = `RoomFinder PRO पर उपलब्ध कमरा:\n${title}\nस्थान: ${loc}\nकिराया: ₹${price}/माह`;
-    if (navigator.share) {
-      navigator.share({ title, text, url: window.location.href });
-    } else {
-      navigator.clipboard.writeText(text);
-      alert("कमरे की जानकारी कॉपी हो गई!");
-    }
-  }
+                    <form id="room-form" onsubmit="handleRoomSubmit(event)" class="space-y-4">
+                        <input type="hidden" id="edit-room-key" value="">
+                        <div>
+                            <label class="text-xs text-gray-300 mb-1 block">रूम शीर्षक (Room Title)</label>
+                            <input type="text" id="room-title" required placeholder="उदा: Single Room for Student" class="custom-input w-full px-3 py-2 rounded-xl text-sm">
+                        </div>
 
-  // ================= OWNER UI & CRUD =================
-  function updateOwnerUi() {
-    if (currentOwnerId) {
-      document.getElementById("ownerAuthPrompt").style.display = "none";
-      document.getElementById("ownerDashboard").style.display = "flex";
-      document.getElementById("displayOwnerId").innerText = currentOwnerId;
-      renderOwnerRooms();
-    } else {
-      document.getElementById("ownerAuthPrompt").style.display = "flex";
-      document.getElementById("ownerDashboard").style.display = "none";
-    }
-  }
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-300 mb-1 block">एरिया / लोकेशन (Area / Location)</label>
+                                <input type="text" id="room-location" required placeholder="उदा: Boring Road, Patna" class="custom-input w-full px-3 py-2 rounded-xl text-sm">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-300 mb-1 block">किराया (₹ प्रति माह)</label>
+                                <input type="number" id="room-price" required placeholder="उदा: 5000" class="custom-input w-full px-3 py-2 rounded-xl text-sm">
+                            </div>
+                        </div>
 
-  function renderOwnerRooms() {
-    if (!currentOwnerId) return;
-    const container = document.getElementById("ownerRoomsListContainer");
-    const myRooms = allRooms.filter(r => String(r.owner_id) === String(currentOwnerId));
+                        <div>
+                            <label class="text-xs text-gray-300 mb-1 block">संपर्क नंबर (Contact Number)</label>
+                            <input type="text" id="room-phone" required placeholder="उदा: 9876543210" class="custom-input w-full px-3 py-2 rounded-xl text-sm">
+                        </div>
 
-    document.getElementById("ownerRoomsCountText").innerText = myRooms.length;
+                        <div>
+                            <label class="text-xs text-gray-300 mb-1 block">कमरे की पूरी जानकारी (Facilities / Details)</label>
+                            <textarea id="room-details" rows="3" required placeholder="सुविधाएं: वाई-फाई, आरआरओ पानी..." class="custom-input w-full px-3 py-2 rounded-xl text-sm"></textarea>
+                        </div>
 
-    if (myRooms.length === 0) {
-      container.innerHTML = `<div class="empty-state">आपने अभी तक कोई कमरा नहीं जोड़ा है।</div>`;
-      return;
-    }
+                        <div>
+                            <label class="text-xs text-gray-300 mb-1 block">कमरे की फोटो (Photo Upload — अधिकतम 4)</label>
+                            <div class="drop-zone text-center" id="dropZone" onclick="document.getElementById('room-photo').click()">
+                                <p class="text-xs text-gray-400"><i class="fa-solid fa-cloud-arrow-up text-indigo-400 text-lg mb-1 block"></i> Click या फोटो यहाँ ड्रॉप करें (1-4 फोटो)</p>
+                                <div class="preview-grid" id="previewGrid"></div>
+                            </div>
+                            <input type="file" id="room-photo" accept="image/*" hidden multiple onchange="showPreviews(this.files)">
+                        </div>
 
-    container.innerHTML = myRooms.map(r => buildRoomCardHtml(r, true)).join("");
-  }
+                        <div class="flex space-x-2">
+                            <button type="submit" id="submit-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl text-sm font-semibold transition shadow-lg">
+                                पब्लिश करें (Publish Room) 🚀
+                            </button>
+                            <button type="button" id="cancel-edit-btn" onclick="resetRoomForm()" class="hidden bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-xl text-sm font-semibold transition">
+                                रद्द करें
+                            </button>
+                        </div>
+                    </form>
+                    <div id="status" class="text-xs font-bold text-center mt-2"></div>
 
-  // Photo Selection
-  function handlePhotosSelected(event) {
-    const files = Array.from(event.target.files);
-    selectedFiles = (selectedFiles.concat(files)).slice(0, 4);
-    renderPhotoPreviews();
-  }
+                    <!-- Upload Progress (spinner + bar + time estimate) -->
+                    <div id="uploadProgressBox" class="hidden custom-card p-5 rounded-2xl mt-3 text-center space-y-3 border-indigo-500/40">
+                        <div class="mx-auto w-12 h-12 border-4 border-indigo-500/25 border-t-indigo-500 rounded-full animate-spin"></div>
+                        <p id="uploadProgressText" class="text-sm text-gray-200 font-medium">Upload ho raha hai...</p>
+                        <div class="w-full bg-[#1e2238] rounded-full h-2.5 overflow-hidden">
+                            <div id="uploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width:0%"></div>
+                        </div>
+                        <p id="uploadProgressSub" class="text-xs text-gray-400">Kripya wait karein...</p>
+                    </div>
+                </div>
 
-  function renderPhotoPreviews() {
-    const container = document.getElementById("photoPreviewsBox");
-    container.innerHTML = selectedFiles.map((file, idx) => `
-      <div class="photo-thumb">
-        <img src="${URL.createObjectURL(file)}" alt="thumb">
-        <button class="btn-remove-thumb" onclick="removePhoto(${idx})">✕</button>
-      </div>
-    `).join("");
-  }
+                <!-- My Listings -->
+                <div class="space-y-3">
+                    <h3 class="text-sm font-semibold text-gray-300">मेरे जोड़े गए कमरे (Listings & Control)</h3>
+                    <div id="owner-listings-container" class="space-y-3">
+                        <p class="text-gray-500 text-xs">कोई लिस्टिंग नहीं है।</p>
+                    </div>
+                </div>
 
-  function removePhoto(idx) {
-    selectedFiles.splice(idx, 1);
-    renderPhotoPreviews();
-  }
+            </div>
 
-  // Submit Room
-  async function submitRoomForm() {
-    if (!currentOwnerId) {
-      openAuthModal(true);
-      return;
-    }
+        </section>
+    </main>
 
-    const title = document.getElementById("inputTitle").value.trim();
-    const location = document.getElementById("inputLocation").value.trim();
-    const price = document.getElementById("inputPrice").value.trim();
-    const phone = document.getElementById("inputPhone").value.trim();
-    const details = document.getElementById("inputDetails").value.trim();
+    <!-- Login / Register Modal (File 1 ka system, Design 2 ke style me) -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="custom-card w-full max-w-sm rounded-2xl p-6 relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-sm">✕</button>
+            <h3 id="auth-modal-title" class="text-lg font-bold text-white text-center mb-1">
+                <i class="fa-solid fa-user-shield text-indigo-400 mr-2"></i>Login Account
+            </h3>
+            <p id="auth-modal-sub" class="text-xs text-gray-400 text-center mb-4">Upload karne ke liye apna 5-Digit ID aur Password darj karein.</p>
 
-    if (!title || !location || !price || !phone || !details) {
-      alert("कृपया सभी आवश्यक जानकारी भरें!");
-      return;
-    }
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-gray-300 mb-1 block">5 Digit ID</label>
+                    <input type="text" id="auth-id-input" maxlength="5" oninput="validateAuthInputs()" placeholder="उदा: 48213" class="custom-input w-full px-3 py-2.5 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-300 mb-1 block">Password</label>
+                    <input type="password" id="auth-pass-input" oninput="validateAuthInputs()" placeholder="Password darj karein" class="custom-input w-full px-3 py-2.5 rounded-xl text-sm">
+                </div>
+                <button id="auth-submit-btn" onclick="submitAuth()" disabled class="w-full bg-gray-700 text-gray-400 py-2.5 rounded-xl text-sm font-semibold cursor-not-allowed transition">Login</button>
+                <div id="auth-switch-text" onclick="toggleAuthMode()" class="text-center text-xs text-gray-400 cursor-pointer pt-1">
+                    Naya ID chahiye? <span class="text-indigo-400 font-semibold">Register Karein</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    if (!editingRoomId && selectedFiles.length === 0) {
-      alert("कृपया कमरे की कम से कम 1 फोटो चुनें!");
-      return;
-    }
+    <!-- Logout Confirm Modal -->
+    <div id="logout-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="custom-card w-full max-w-xs rounded-2xl p-6 text-center">
+            <i class="fa-solid fa-triangle-exclamation text-3xl text-red-400 mb-3"></i>
+            <h4 class="text-white font-bold mb-1">Warning!</h4>
+            <p class="text-xs text-gray-400 mb-4">क्या आप सच में लॉगआउट करना चाहते हैं?</p>
+            <div class="flex gap-2">
+                <button onclick="closeLogoutConfirm()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl text-xs font-semibold">Cancel</button>
+                <button onclick="confirmLogout()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded-xl text-xs font-semibold">Haan, Logout</button>
+            </div>
+        </div>
+    </div>
 
-    const progressBox = document.getElementById("uploadProgressBox");
-    const progressFill = document.getElementById("uploadProgressFill");
-    const statusText = document.getElementById("uploadStatusText");
-    const subText = document.getElementById("uploadSubText");
-    const submitBtn = document.getElementById("btnSubmitRoom");
+    <!-- Script Logic -->
+    <script>
+        const FIREBASE_DB_URL = "https://neetjee-ca8f5-default-rtdb.firebaseio.com";
+        const AUTH_API_BASE = "https://secret-ol9o.onrender.com/api";
 
-    progressBox.style.display = "flex";
-    submitBtn.disabled = true;
+        // ---- Auth state (File 1 ka 5-digit ID + Password system) ----
+        let isLoginMode = true;
+        let currentOwnerId = localStorage.getItem("device_5digit_code") || "";
+        let memorySessionAuth = localStorage.getItem("is_authenticated") === "true";
+        let selectedFiles = [];
 
-    try {
-      const uploadedEmbeds = [];
+        window.onload = function() {
+            if (memorySessionAuth && currentOwnerId) {
+                document.getElementById("owner-auth-box").classList.add("hidden");
+                document.getElementById("owner-dashboard").classList.remove("hidden");
+                document.getElementById("display-owner-id").innerText = currentOwnerId;
+                // Owner listings ab yahin load nahi hongi — tab open hone par lazy-load hongi,
+                // taaki Telegram embed script Student wali listings ke saath race na kare.
+            }
+            loadStudentListings();
+        };
 
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
-        statusText.innerText = `फोटो ${i + 1}/${selectedFiles.length} अपलोड हो रही है...`;
-        progressFill.style.width = `${Math.round(((i) / selectedFiles.length) * 85)}%`;
-        subText.innerText = "Telegram CDN में ट्रांसफर हो रहा है...";
-
-        const formData = new FormData();
-        formData.append("photo", file);
-        formData.append("deviceId", currentOwnerId);
-
-        const res = await fetch(`${AUTH_API}/upload`, {
-          method: "POST",
-          body: formData
-        });
-        const json = await res.json();
-        if (json && json.embed_code) {
-          uploadedEmbeds.push(json.embed_code);
-        } else {
-          throw new Error(json.message || "Upload failed");
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
-      }
 
-      statusText.innerText = "Firebase में डेटा सेव हो रहा है...";
-      progressFill.style.width = "95%";
-      subText.innerText = "बस एक पल...";
+        function switchTab(tab) {
+            if(tab === 'student') {
+                document.getElementById('view-student').classList.remove('hidden');
+                document.getElementById('view-owner').classList.add('hidden');
+                document.getElementById('btn-student').className = "px-4 py-1.5 rounded-lg text-xs font-medium transition bg-indigo-600 text-white shadow";
+                document.getElementById('btn-owner').className = "px-4 py-1.5 rounded-lg text-xs font-medium transition text-gray-400";
+                loadStudentListings();
+            } else {
+                document.getElementById('view-student').classList.add('hidden');
+                document.getElementById('view-owner').classList.remove('hidden');
+                document.getElementById('btn-owner').className = "px-4 py-1.5 rounded-lg text-xs font-medium transition bg-indigo-600 text-white shadow";
+                document.getElementById('btn-student').className = "px-4 py-1.5 rounded-lg text-xs font-medium transition text-gray-400";
+                if (memorySessionAuth) loadOwnerListings();
+            }
+        }
 
-      const finalEmbeds = uploadedEmbeds.length > 0 ? uploadedEmbeds : existingEmbedCodes;
+        // ---------- Auth Modal (Login / Register) ----------
+        function openAuthModal(login) {
+            isLoginMode = login;
+            const modal = document.getElementById("auth-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            document.getElementById("auth-modal-title").innerHTML = login
+                ? '<i class="fa-solid fa-user-shield text-indigo-400 mr-2"></i>Login Account'
+                : '<i class="fa-solid fa-user-plus text-indigo-400 mr-2"></i>Register Account';
+            document.getElementById("auth-submit-btn").innerText = login ? "Login" : "Register";
+            document.getElementById("auth-switch-text").innerHTML = login
+                ? 'Naya ID chahiye? <span class="text-indigo-400 font-semibold">Register Karein</span>'
+                : 'Pehle se ID hai? <span class="text-indigo-400 font-semibold">Login Karein</span>';
+            document.getElementById("auth-id-input").value = "";
+            document.getElementById("auth-pass-input").value = "";
+            validateAuthInputs();
+        }
 
-      const roomData = {
-        owner_id: currentOwnerId,
-        title,
-        location,
-        price,
-        phone,
-        details,
-        embed_codes: finalEmbeds,
-        status: "Active",
-        timestamp: Date.now()
-      };
+        function closeAuthModal() {
+            const modal = document.getElementById("auth-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
 
-      const url = editingRoomId ? `${FIREBASE_DB}/${editingRoomId}.json` : `${FIREBASE_DB}.json`;
-      const method = editingRoomId ? "PUT" : "POST";
+        function toggleAuthMode() { openAuthModal(!isLoginMode); }
 
-      const dbRes = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(roomData)
-      });
+        function validateAuthInputs() {
+            const valid = document.getElementById("auth-id-input").value.trim() && document.getElementById("auth-pass-input").value.trim();
+            const btn = document.getElementById("auth-submit-btn");
+            btn.disabled = !valid;
+            btn.className = valid
+                ? "w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-semibold transition"
+                : "w-full bg-gray-700 text-gray-400 py-2.5 rounded-xl text-sm font-semibold cursor-not-allowed transition";
+        }
 
-      if (!dbRes.ok) throw new Error("Firebase error");
+        async function submitAuth() {
+            const device_id = document.getElementById("auth-id-input").value.trim();
+            const password = document.getElementById("auth-pass-input").value.trim();
+            if (!device_id || !password) return;
 
-      alert("कमरा सफलतापूर्वक सेव हो गया! ✅");
-      resetForm();
-      fetchRooms();
-    } catch (err) {
-      alert("त्रुटि: " + err.message);
-    } finally {
-      progressBox.style.display = "none";
-      submitBtn.disabled = false;
-    }
-  }
+            const endpoint = isLoginMode ? `${AUTH_API_BASE}/login` : `${AUTH_API_BASE}/register`;
+            const btn = document.getElementById("auth-submit-btn");
+            const originalLabel = isLoginMode ? "Login" : "Register";
+            btn.innerText = "Please wait...";
+            btn.disabled = true;
 
-  function editRoom(roomId) {
-    const room = allRooms.find(r => r.id === roomId);
-    if (!room) return;
+            try {
+                const res = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ device_id, password })
+                });
+                const data = await res.json();
 
-    editingRoomId = room.id;
-    existingEmbedCodes = room.embed_codes || [];
-    selectedFiles = [];
-    renderPhotoPreviews();
+                if (data.success) {
+                    localStorage.setItem("device_5digit_code", device_id);
+                    localStorage.setItem("is_authenticated", "true");
+                    currentOwnerId = device_id;
+                    memorySessionAuth = true;
+                    closeAuthModal();
+                    document.getElementById("owner-auth-box").classList.add("hidden");
+                    document.getElementById("owner-dashboard").classList.remove("hidden");
+                    document.getElementById("display-owner-id").innerText = currentOwnerId;
+                    loadOwnerListings();
+                    showToast(isLoginMode ? "Login successful!" : "Registered successfully!", "success");
+                } else {
+                    showToast(data.error || "Authentication failed!", "error");
+                    btn.innerText = originalLabel;
+                    validateAuthInputs();
+                }
+            } catch (err) {
+                showToast("Connection error! Server check karein.", "error");
+                btn.innerText = originalLabel;
+                validateAuthInputs();
+            }
+        }
 
-    document.getElementById("formHeaderTitle").innerText = "कमरा अपडेट करें (Update Room)";
-    document.getElementById("inputTitle").value = room.title;
-    document.getElementById("inputLocation").value = room.location;
-    document.getElementById("inputPrice").value = room.price;
-    document.getElementById("inputPhone").value = room.phone;
-    document.getElementById("inputDetails").value = room.details;
-    document.getElementById("btnSubmitRoom").innerText = "अपडेट करें (Update Room)";
-    document.getElementById("btnCancelEdit").style.display = "block";
+        // ---------- Logout ----------
+        function showLogoutWarning() {
+            const modal = document.getElementById("logout-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+        function closeLogoutConfirm() {
+            const modal = document.getElementById("logout-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+        function confirmLogout() {
+            localStorage.removeItem("device_5digit_code");
+            localStorage.removeItem("is_authenticated");
+            currentOwnerId = "";
+            memorySessionAuth = false;
+            closeLogoutConfirm();
+            document.getElementById("owner-dashboard").classList.add("hidden");
+            document.getElementById("owner-auth-box").classList.remove("hidden");
+            showToast("Logged out successfully", "info");
+        }
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+        // ---------- Photo preview / drag-drop (max 4 files) ----------
+        const dropZone = document.getElementById("dropZone");
+        const fileInput = document.getElementById("room-photo");
+        const previewGrid = document.getElementById("previewGrid");
 
-  function resetForm() {
-    editingRoomId = null;
-    existingEmbedCodes = [];
-    selectedFiles = [];
-    renderPhotoPreviews();
+        if(dropZone) {
+            dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+            dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+            dropZone.addEventListener("drop", e => {
+                e.preventDefault();
+                dropZone.classList.remove("dragover");
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    showPreviews(e.dataTransfer.files);
+                }
+            });
+        }
 
-    document.getElementById("formHeaderTitle").innerText = "नया कमरा जोड़ें (Add Room)";
-    document.getElementById("inputTitle").value = "";
-    document.getElementById("inputLocation").value = "";
-    document.getElementById("inputPrice").value = "";
-    document.getElementById("inputPhone").value = "";
-    document.getElementById("inputDetails").value = "";
-    document.getElementById("btnSubmitRoom").innerText = "पब्लिश करें (Publish Room) 🚀";
-    document.getElementById("btnCancelEdit").style.display = "none";
-  }
+        function showPreviews(files) {
+            const imgFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
+            if (imgFiles.length === 0) {
+                showStatus("Sirf image files allowed hain!", false);
+                return;
+            }
+            if (imgFiles.length > 4) {
+                showStatus("Maximum 4 photos allowed hain, pehli 4 le raha hu.", false);
+            }
+            selectedFiles = imgFiles.slice(0, 4);
+            previewGrid.innerHTML = "";
+            selectedFiles.forEach(file => {
+                const img = document.createElement("img");
+                img.src = URL.createObjectURL(file);
+                previewGrid.appendChild(img);
+            });
+            showStatus("", null);
+        }
 
-  async function toggleStatus(roomId, currentStatus) {
-    const newStatus = currentStatus.toLowerCase() === "paused" ? "Active" : "Paused";
-    try {
-      await fetch(`${FIREBASE_DB}/${roomId}/status.json`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newStatus)
-      });
-      fetchRooms();
-    } catch (e) {
-      alert("स्टेटस बदलने में विफल");
-    }
-  }
+        function showStatus(msg, ok) {
+            const el = document.getElementById("status");
+            el.innerText = msg;
+            el.className = "text-xs font-bold text-center mt-2 " + (ok === true ? "text-emerald-400" : ok === false ? "text-red-400" : "text-gray-400");
+        }
 
-  async function deleteRoom(roomId) {
-    if (!confirm("क्या आप सच में यह कमरा डिलीट करना चाहते हैं?")) return;
-    try {
-      await fetch(`${FIREBASE_DB}/${roomId}.json`, { method: "DELETE" });
-      fetchRooms();
-    } catch (e) {
-      alert("डिलीट करने में विफल");
-    }
-  }
+        // ---------- Upload progress box: spinner + bar + andazan time baaki ----------
+        function showUploadProgress(text, percent, sub) {
+            document.getElementById("status").classList.add("hidden");
+            const box = document.getElementById("uploadProgressBox");
+            box.classList.remove("hidden");
+            document.getElementById("uploadProgressText").innerText = text;
+            document.getElementById("uploadProgressBar").style.width = Math.min(100, Math.max(0, percent)) + "%";
+            document.getElementById("uploadProgressSub").innerText = sub || "";
+        }
+        function hideUploadProgress() {
+            document.getElementById("uploadProgressBox").classList.add("hidden");
+            document.getElementById("status").classList.remove("hidden");
+        }
 
-  // ================= AUTH MODAL =================
-  function openAuthModal(loginMode) {
-    isLoginMode = loginMode;
-    document.getElementById("authDeviceId").value = "";
-    document.getElementById("authPassword").value = "";
-    document.getElementById("authErrorMsg").style.display = "none";
-    updateAuthModalLabels();
-    document.getElementById("authModal").classList.add("active");
-  }
+        // ---------- Naya Telegram embed link Firebase ke photos/{ID} node me aane ka wait karta hai (onTick se progress bataata hai) ----------
+        async function waitForNewEmbed(device_id, beforeCount, onTick) {
+            const maxAttempts = 15;
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                if (onTick) onTick(attempt, maxAttempts);
+                await new Promise(r => setTimeout(r, 2000));
+                const res = await fetch(`${FIREBASE_DB_URL}/photos/${device_id}.json`);
+                const data = await res.json();
+                if (data) {
+                    const values = Object.values(data);
+                    if (values.length > beforeCount) {
+                        values.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+                        if (values[0] && values[0].url) return values[0].url;
+                    }
+                }
+            }
+            throw new Error("Telegram se embed link nahi mila, thodi der baad try karein");
+        }
 
-  function closeAuthModal() {
-    document.getElementById("authModal").classList.remove("active");
-  }
+        // ---------- 1 se 4 photos ek ke baad ek upload karta hai, spinner/bar par live progress dikhata hai ----------
+        async function uploadAllPhotos(files, device_id) {
+            const embeds = [];
+            const total = files.length;
+            const stepWeight = 100 / total;
 
-  function toggleAuthMode() {
-    isLoginMode = !isLoginMode;
-    updateAuthModalLabels();
-  }
+            for (let i = 0; i < total; i++) {
+                const baseProgress = i * stepWeight;
 
-  function updateAuthModalLabels() {
-    document.getElementById("authModalTitle").innerText = isLoginMode ? "Login Account" : "Register Account";
-    document.getElementById("btnAuthSubmit").innerText = isLoginMode ? "Login" : "Register";
-    document.getElementById("authToggleText").innerHTML = isLoginMode ? "नया ID चाहिए? <span>Register करें</span>" : "पहले से ID है? <span>Login करें</span>";
-  }
+                showUploadProgress(
+                    `Photo ${i + 1}/${total} Telegram पर अपलोड हो रही है...`,
+                    baseProgress + stepWeight * 0.15,
+                    "Kripya wait karein..."
+                );
 
-  async function submitAuth() {
-    const deviceId = document.getElementById("authDeviceId").value.trim();
-    const password = document.getElementById("authPassword").value.trim();
-    const errorEl = document.getElementById("authErrorMsg");
-    const btn = document.getElementById("btnAuthSubmit");
+                const beforeRes = await fetch(`${FIREBASE_DB_URL}/photos/${device_id}.json`);
+                const beforeData = await beforeRes.json();
+                const beforeCount = beforeData ? Object.keys(beforeData).length : 0;
 
-    if (!deviceId || !password) {
-      errorEl.innerText = "कृपया ID और पासवर्ड दोनों भरें";
-      errorEl.style.display = "block";
-      return;
-    }
+                const formData = new FormData();
+                formData.append("file", files[i]);
+                formData.append("device_id", device_id);
 
-    btn.disabled = true;
-    btn.innerText = "कृपया प्रतीक्षा करें...";
+                const res = await fetch(`${AUTH_API_BASE}/upload`, { method: "POST", body: formData });
+                if (!res.ok) {
+                    throw new Error(`Photo ${i + 1} upload fail hua (status ${res.status})`);
+                }
 
-    const endpoint = isLoginMode ? `${AUTH_API}/login` : `${AUTH_API}/register`;
+                const url = await waitForNewEmbed(device_id, beforeCount, (attempt, max) => {
+                    const secLeft = (max - attempt) * 2;
+                    const withinStep = 0.3 + (attempt / max) * 0.7;
+                    showUploadProgress(
+                        `Photo ${i + 1}/${total} ka embed link taiyar ho raha hai...`,
+                        baseProgress + stepWeight * withinStep,
+                        `Andazan ~${secLeft} sec baaki`
+                    );
+                });
+                embeds.push(url);
 
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, password })
-      });
-      const data = await res.json();
+                showUploadProgress(
+                    `Photo ${i + 1}/${total} ho gaya ✅`,
+                    (i + 1) * stepWeight,
+                    (i + 1 < total) ? "Agli photo shuru ho rahi hai..." : "Firebase me save ho raha hai..."
+                );
+            }
+            return embeds;
+        }
 
-      if (!res.ok) {
-        throw new Error(data.message || "प्रमाणीकरण विफल रहा");
-      }
+        // ---------- Room Submit: text details + photo -> Firebase (owner ID ke saath ek saath) ----------
+        async function handleRoomSubmit(event) {
+            event.preventDefault();
+            if (!memorySessionAuth || !currentOwnerId) {
+                showToast("Pehle login karein!", "error");
+                openAuthModal(true);
+                return;
+            }
 
-      currentOwnerId = deviceId;
-      localStorage.setItem("rf_owner_id", deviceId);
-      closeAuthModal();
-      updateOwnerUi();
-      fetchRooms();
-    } catch (err) {
-      errorEl.innerText = err.message;
-      errorEl.style.display = "block";
-    } finally {
-      btn.disabled = false;
-      btn.innerText = isLoginMode ? "Login" : "Register";
-    }
-  }
+            const editKey = document.getElementById("edit-room-key").value;
+            const title = document.getElementById("room-title").value;
+            const location = document.getElementById("room-location").value;
+            const price = document.getElementById("room-price").value;
+            const phone = document.getElementById("room-phone").value;
+            const details = document.getElementById("room-details").value;
 
-  function logoutOwner() {
-    if (!confirm("क्या आप सच में लॉगआउट करना चाहते हैं?")) return;
-    currentOwnerId = "";
-    localStorage.removeItem("rf_owner_id");
-    updateOwnerUi();
-  }
+            const submitBtn = document.getElementById("submit-btn");
+            submitBtn.disabled = true;
 
-  function escapeHtml(str) {
-    return (str || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
-</script>
+            try {
+                let embedCodes = [];
+                if (selectedFiles.length > 0) {
+                    embedCodes = await uploadAllPhotos(selectedFiles, currentOwnerId);
+                }
+
+                showStatus("⏳ Firebase में डेटा सेव हो रहा है...", null);
+
+                let finalEmbedCodes = embedCodes;
+                if (selectedFiles.length === 0 && editKey) {
+                    const existingRes = await fetch(`${FIREBASE_DB_URL}/rooms/${editKey}.json`);
+                    const existingData = await existingRes.json();
+                    if (existingData && existingData.embed_codes) {
+                        finalEmbedCodes = existingData.embed_codes;
+                    } else if (existingData && existingData.embed_code) {
+                        finalEmbedCodes = [existingData.embed_code];
+                    }
+                }
+
+                if (!editKey && selectedFiles.length === 0) {
+                    showToast("कृपया कमरे की कम से कम 1 फोटो चुनें!", "error");
+                    submitBtn.disabled = false;
+                    showStatus("", null);
+                    return;
+                }
+
+                // Sab kuch ek hi object me, owner ID ke saath jud kar Firebase me jaata hai
+                const roomData = {
+                    owner_id: currentOwnerId,
+                    title: title,
+                    location: location,
+                    price: price,
+                    phone: phone,
+                    details: details,
+                    embed_codes: finalEmbedCodes,
+                    status: "Active",
+                    timestamp: Date.now()
+                };
+
+                let url = `${FIREBASE_DB_URL}/rooms.json`;
+                let method = "POST";
+
+                if (editKey) {
+                    url = `${FIREBASE_DB_URL}/rooms/${editKey}.json`;
+                    method = "PATCH";
+                }
+
+                const fbResponse = await fetch(url, {
+                    method: method,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(roomData)
+                });
+
+                if (fbResponse.ok) {
+                    showStatus("✅ कमरा सफलतापूर्वक सेव हो गया!", true);
+                    showToast("Room saved successfully!", "success");
+                    resetRoomForm();
+                    loadOwnerListings();
+                } else {
+                    throw new Error("Firebase save failed");
+                }
+
+            } catch (err) {
+                showStatus("❌ त्रुटि: " + err.message, false);
+                showToast("Error: " + err.message, "error");
+            } finally {
+                hideUploadProgress();
+                submitBtn.disabled = false;
+            }
+        }
+
+        function resetRoomForm() {
+            document.getElementById("room-form").reset();
+            document.getElementById("edit-room-key").value = "";
+            document.getElementById("submit-btn").innerText = "पब्लिश करें (Publish Room) 🚀";
+            document.getElementById("cancel-edit-btn").classList.add("hidden");
+            previewGrid.innerHTML = "";
+            selectedFiles = [];
+            showStatus("", null);
+        }
+
+        async function editRoom(key) {
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}/rooms/${key}.json`);
+                const room = await res.json();
+                if(!room) return;
+
+                document.getElementById("edit-room-key").value = key;
+                document.getElementById("room-title").value = room.title;
+                document.getElementById("room-location").value = room.location;
+                document.getElementById("room-price").value = room.price;
+                document.getElementById("room-phone").value = room.phone;
+                document.getElementById("room-details").value = room.details;
+
+                document.getElementById("submit-btn").innerText = "अपडेट करें (Update Room)";
+                document.getElementById("cancel-edit-btn").classList.remove("hidden");
+                window.scrollTo({ top: 200, behavior: 'smooth' });
+            } catch(e) {
+                showToast("डाटा लोड करने में त्रुटि!", "error");
+            }
+        }
+
+        async function toggleStatus(key, currentStatus) {
+            const newStatus = currentStatus === "Paused" ? "Active" : "Paused";
+            try {
+                await fetch(`${FIREBASE_DB_URL}/rooms/${key}.json`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                loadOwnerListings();
+            } catch(e) {
+                showToast("स्टेटस बदलने में विफल!", "error");
+            }
+        }
+
+        async function deleteRoom(key) {
+            if(confirm("क्या आप वाकई इस कमरे को हटाना चाहते हैं?")) {
+                try {
+                    await fetch(`${FIREBASE_DB_URL}/rooms/${key}.json`, { method: "DELETE" });
+                    loadOwnerListings();
+                    showToast("Room delete ho gaya", "info");
+                } catch(e) {
+                    showToast("डिलीट करने में विफल!", "error");
+                }
+            }
+        }
+
+        // ---------- Telegram embed <script> tags innerHTML se andar aane par khud run nahi hote, isliye inhe re-create karke activate karna padta hai ----------
+        function activateEmbedScripts(container) {
+            setTimeout(() => {
+                container.querySelectorAll('script').forEach(oldScript => {
+                    if (!oldScript.getAttribute('data-processed')) {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                        newScript.setAttribute('data-processed', 'true');
+                        newScript.text = oldScript.text;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    }
+                });
+            }, 100);
+        }
+
+        // ---------- Room ke 1-4 photos ka swipeable carousel banata hai (Telegram header crop + click-block ke saath) ----------
+        function renderPhotoCarousel(room, cardId) {
+            const embeds = (room.embed_codes && room.embed_codes.length) ? room.embed_codes : (room.embed_code ? [room.embed_code] : []);
+            if (embeds.length === 0) return '';
+
+            const slidesHtml = embeds.map(code => `
+                <div class="carousel-slide"><div class="tg-embed-box">${code}</div></div>
+            `).join('');
+
+            const dotsHtml = embeds.length > 1
+                ? `<div class="carousel-dots">${embeds.map((_, i) => `<span class="carousel-dot ${i === 0 ? 'active' : ''}"></span>`).join('')}</div>`
+                : '';
+
+            const navHtml = embeds.length > 1 ? `
+                <button type="button" class="carousel-btn prev" onclick="event.stopPropagation(); carouselMove('${cardId}', -1)"><i class="fa-solid fa-chevron-left"></i></button>
+                <button type="button" class="carousel-btn next" onclick="event.stopPropagation(); carouselMove('${cardId}', 1)"><i class="fa-solid fa-chevron-right"></i></button>
+                <span id="${cardId}-badge" class="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-20">1/${embeds.length}</span>
+            ` : '';
+
+            return `
+                <div class="carousel-wrap" id="${cardId}" data-index="0" data-count="${embeds.length}">
+                    <div class="carousel-track">${slidesHtml}</div>
+                    ${navHtml}
+                    ${dotsHtml}
+                </div>
+            `;
+        }
+
+        function carouselMove(id, dir) {
+            const wrap = document.getElementById(id);
+            if (!wrap) return;
+            const count = parseInt(wrap.getAttribute('data-count'), 10);
+            let idx = parseInt(wrap.getAttribute('data-index'), 10);
+            idx = (idx + dir + count) % count;
+            wrap.setAttribute('data-index', idx);
+            wrap.querySelector('.carousel-track').style.transform = `translateX(-${idx * 100}%)`;
+            wrap.querySelectorAll('.carousel-dot').forEach((dot, i) => dot.classList.toggle('active', i === idx));
+            const badge = document.getElementById(`${id}-badge`);
+            if (badge) badge.innerText = `${idx + 1}/${count}`;
+        }
+
+        async function loadOwnerListings() {
+            const container = document.getElementById("owner-listings-container");
+            container.innerHTML = `<p class="text-gray-500 text-xs">लोड हो रहा है...</p>`;
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}/rooms.json`);
+                const data = await res.json();
+                container.innerHTML = "";
+
+                if(!data) {
+                    container.innerHTML = `<p class="text-gray-500 text-xs">आपने अभी तक कोई कमरा नहीं जोड़ा है।</p>`;
+                    return;
+                }
+
+                let count = 0;
+                for(let key in data) {
+                    let room = data[key];
+                    if(room.owner_id === currentOwnerId) {
+                        count++;
+                        let statusBadge = room.status === "Paused" ? '<span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded">Paused</span>' : '<span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">Active</span>';
+                        let pauseBtnText = room.status === "Paused" ? "Active करें" : "Pause करें";
+
+                        container.innerHTML += `
+                            <div class="custom-card p-4 rounded-xl space-y-3">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            ${statusBadge}
+                                            <h4 class="font-bold text-sm text-white">${room.title}</h4>
+                                        </div>
+                                        <p class="text-xs text-gray-400 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${room.location} • <span class="text-indigo-400 font-semibold">₹${room.price}</span></p>
+                                    </div>
+                                    <div class="flex space-x-1">
+                                        <button onclick="editRoom('${key}')" class="bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white px-2.5 py-1 rounded-lg text-xs transition" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <button onclick="toggleStatus('${key}', '${room.status || 'Active'}')" class="bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white px-2.5 py-1 rounded-lg text-xs transition">
+                                            ${pauseBtnText}
+                                        </button>
+                                        <button onclick="deleteRoom('${key}')" class="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2.5 py-1 rounded-lg text-xs transition" title="Delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                if(count === 0) {
+                    container.innerHTML = `<p class="text-gray-500 text-xs">आपने अभी तक कोई कमरा नहीं जोड़ा है।</p>`;
+                }
+                activateEmbedScripts(container);
+            } catch(e) {
+                container.innerHTML = `<p class="text-red-400 text-xs">डाटा लोड करने में विफल।</p>`;
+            }
+        }
+
+        // ---------- Room ka link share karta hai (native share sheet, ya copy fallback) ----------
+        function shareRoom(title, location) {
+            const shareText = `${title} - ${location} | RoomFinder PRO पर देखें`;
+            const shareUrl = window.location.href;
+            if (navigator.share) {
+                navigator.share({ title: title, text: shareText, url: shareUrl }).catch(() => {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(`${shareText}\n${shareUrl}`)
+                    .then(() => showToast("Link copy ho gaya!", "success"))
+                    .catch(() => showToast("Share/copy fail hua", "error"));
+            } else {
+                showToast("Share supported nahi hai is browser me", "error");
+            }
+        }
+
+        async function loadStudentListings() {
+            const container = document.getElementById("student-listings-container");
+            container.innerHTML = `<p class="text-gray-500 text-sm">कमरे खोजे जा रहे हैं...</p>`;
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}/rooms.json`);
+                const data = await res.json();
+                container.innerHTML = "";
+
+                if(!data) {
+                    container.innerHTML = `<p class="text-gray-500 text-sm">फिलहाल कोई कमरा उपलब्ध नहीं है।</p>`;
+                    return;
+                }
+
+                for(let key in data) {
+                    let room = data[key];
+                    if(room.status !== "Paused") {
+                        container.innerHTML += `
+                            <div class="custom-card p-4 rounded-2xl space-y-3">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-medium">Verified Room</span>
+                                        <h3 class="font-bold text-base text-white mt-1">${room.title}</h3>
+                                        <p class="text-xs text-gray-400"><i class="fa-solid fa-location-dot text-red-400 mr-1"></i>${room.location}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-indigo-400 font-bold text-base">₹${room.price}</span>
+                                        <span class="text-[10px] text-gray-500 block">प्रति माह</span>
+                                    </div>
+                                </div>
+
+                                ${renderPhotoCarousel(room, `student-carousel-${key}`)}
+
+                                <p class="text-xs text-gray-300 bg-[#1e2238] p-2.5 rounded-xl border border-gray-800">${room.details}</p>
+                                <div class="flex items-center gap-2 pt-2 border-t border-gray-800/60">
+                                    <a href="tel:${room.phone}" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center justify-center shadow">
+                                        <i class="fa-solid fa-phone mr-1.5"></i> ${room.phone}
+                                    </a>
+                                    <a href="https://wa.me/91${room.phone}" target="_blank" class="border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center justify-center">
+                                        <i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp
+                                    </a>
+                                    <button type="button" onclick="shareRoom('${(room.title||'').replace(/'/g,"")}', '${(room.location||'').replace(/'/g,"")}')" class="border border-gray-700 text-gray-300 hover:bg-gray-800 px-3 py-1.5 rounded-xl transition">
+                                        <i class="fa-solid fa-share-nodes"></i>
+                                    </button>
+                                </div>
+                                <span class="text-[10px] text-gray-500 block text-right">Owner ID: ${room.owner_id}</span>
+                            </div>
+                        `;
+                    }
+                }
+                activateEmbedScripts(container);
+            } catch(e) {
+                container.innerHTML = `<p class="text-red-400 text-sm">कमरे लोड करने में त्रुटि हुई।</p>`;
+            }
+        }
+    </script>
+
 </body>
 </html>
