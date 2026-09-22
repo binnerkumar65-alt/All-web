@@ -1,761 +1,1565 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unlimited Hub</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoomFinder PRO - Student & Owner Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0b0d12; color: #f1f5f9; margin: 0; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 90px; }
-    .container { width: 100%; max-width: 450px; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .user-profile { display: flex; align-items: center; gap: 12px; }
-    .avatar-wrapper { position: relative; cursor: pointer; }
-    .avatar { width: 46px; height: 46px; background: #c7d2fe; color: #1e1b4b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; overflow: hidden; border: 2px solid #38bdf8; }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .user-info { display: flex; flex-direction: column; }
-    .app-title { font-size: 1.15rem; font-weight: 700; color: #ffffff; margin: 0; }
-    .status-badge { font-size: 0.78rem; color: #94a3b8; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
-    .status-badge .secured { color: #38bdf8; }
-    .header-actions { display: flex; align-items: center; gap: 10px; }
-    .circle-btn { width: 42px; height: 42px; background: #1b1e26; border: 1px solid #2a2e3d; border-radius: 50%; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
-    .circle-btn:hover { background: #252936; color: #fff; }
-    .circle-btn.upload-btn { background: #38bdf8; color: #0b0d12; border: none; font-size: 1.1rem; }
-    .circle-btn.logout-icon-btn { color: #ef4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); }
-    .circle-btn.logout-icon-btn:hover { background: #ef4444; color: #fff; }
-    .nav-pill { background: #161922; border: 1px solid #232734; padding: 4px; border-radius: 30px; display: flex; margin-bottom: 20px; }
-    .nav-btn { flex: 1; padding: 10px; border: none; background: transparent; color: #94a3b8; border-radius: 25px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .nav-btn.active { background: #e0f2fe; color: #0284c7; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-    .view-section { display: none; }
-    .view-section.active { display: block; }
-    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .gallery-card { background: #161922; border-radius: 14px; overflow: hidden; position: relative; aspect-ratio: 1 / 1; border: 1px solid #232734; cursor: pointer; user-select: none; transition: transform 0.15s; }
-    .gallery-card img, .gallery-card video { width: 100%; height: 100%; object-fit: cover; }
-    .video-icon-indicator { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); color: #38bdf8; font-size: 0.7rem; padding: 3px 6px; border-radius: 4px; z-index: 2; }
-    
-    .photo-date { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.85)); font-size: 0.55rem; color: #cbd5e1; text-align: left; padding: 12px 6px 4px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .gallery-card.selected { border: 2px solid #38bdf8; transform: scale(0.95); }
-    .gallery-card.selected::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 8px; right: 8px; background: #38bdf8; color: #0b0d12; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; z-index: 3; }
-    
-    .load-more-container { grid-column: 1 / -1; text-align: center; margin-top: 20px; }
-    .load-more-btn { background: #161922; border: 1px solid #38bdf8; color: #38bdf8; padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    :root {
+      --bg-dark: #0D0F17;
+      --surface: #16192B;
+      --surface-elevated: #1E2238;
+      --border: #2E3459;
+      --border-subtle: #232742;
+      --primary: #6366F1;
+      --primary-hover: #4F46E5;
+      --primary-light: #818CF8;
+      --success: #10B981;
+      --success-light: #34D399;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --text-primary: #FFFFFF;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+    }
 
-    /* Upload Progress Overlay / Bar */
-    .upload-progress-box { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: #161922; border: 1px solid #38bdf8; padding: 14px 18px; border-radius: 16px; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-    .upload-progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 8px; font-weight: 600; }
-    .progress-track { width: 100%; height: 8px; background: #0b0d12; border-radius: 4px; overflow: hidden; border: 1px solid #2a2e3d; }
-    .progress-fill { width: 0%; height: 100%; background: #38bdf8; transition: width 0.1s linear; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-    .note-box-wrapper { background: #161922; border: 1px solid #232734; border-radius: 16px; padding: 16px; margin-bottom: 24px; }
-    .note-box-title { font-size: 0.95rem; font-weight: 700; color: #ffffff; margin-bottom: 12px; }
-    textarea { width: 100%; height: 110px; background: #0b0d12; border: 1px solid #2a2e3d; border-radius: 12px; padding: 12px; color: #f1f5f9; font-size: 0.9rem; resize: none; margin-bottom: 12px; outline: none; }
-    textarea:focus { border-color: #38bdf8; }
-    .save-note-btn { width: 100%; background: #232734; color: #38bdf8; border: 1px solid #2a2e3d; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
-    .section-subtitle { font-size: 0.95rem; font-weight: 700; color: #ffffff; margin-bottom: 12px; }
-    .note-card { background: #161922; border: 1px solid #232734; border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-    .note-text { font-size: 0.9rem; color: #e2e8f0; word-break: break-word; line-height: 1.4; flex: 1; margin-top: 4px; }
-    .note-action-btn { background: #1f2330; border: 1px solid #2a2e3d; color: #f87171; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
-    
-    .action-bar { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #161922; border: 1px solid #2a2e3d; padding: 8px 18px; border-radius: 30px; z-index: 1500; gap: 15px; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-    .delete-btn-bar { background: #ef4444; color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
-    .cancel-select-btn { background: transparent; color: #94a3b8; border: none; cursor: pointer; font-size: 0.85rem; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-    /* Modal Styles */
-    .modal { display: none; position: fixed; z-index: 4000; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(8px); justify-content: center; align-items: center; flex-direction: column; }
-    .modal-content-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; padding: 20px; }
-    .modal img, .modal video { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-    .modal-date { position: absolute; bottom: 25px; background: rgba(0, 0, 0, 0.6); padding: 6px 14px; border-radius: 20px; color: #38bdf8; font-size: 0.8rem; border: 1px solid rgba(56, 189, 248, 0.2); z-index: 4002; }
-    .modal-top-actions { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 4005; }
-    .modal-action-btn { background: rgba(255,255,255,0.15); color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .modal-delete-btn { background: rgba(239, 68, 68, 0.85); }
-    .modal-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); color: #fff; border: none; width: 46px; height: 46px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 4003; display: flex; align-items: center; justify-content: center; }
-    .modal-prev { left: 15px; }
-    .modal-next { right: 15px; }
-    .modal-loadmore-screen { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: #fff; text-align: center; padding: 20px; z-index: 4005; }
-    .modal-loadmore-screen h3 { margin: 0; font-size: 1.1rem; color: #94a3b8; }
-    .modal-load-btn { background: #38bdf8; color: #0b0d12; border: none; padding: 12px 24px; border-radius: 25px; font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+    .app-container {
+      width: 100%;
+      max-width: 600px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 40px;
+    }
 
-    .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-    .toast { background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 30px; font-size: 0.85rem; font-weight: 600; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-    .toast.success { border-color: #22c55e; color: #4ade80; }
-    .toast.error { border-color: #ef4444; color: #fca5a5; }
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(13, 15, 23, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-    .auth-overlay, .confirm-overlay { display: none; position: fixed; z-index: 3000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 20px; }
-    .auth-box { background: #161922; border: 1px solid #2a2e3d; padding: 24px; border-radius: 20px; width: 100%; max-width: 360px; position: relative; }
-    .auth-box h3 { margin: 0 0 6px 0; color: #fff; font-size: 1.2rem; font-weight: 700; text-align: center; }
-    .auth-box p { font-size: 0.8rem; color: #94a3b8; text-align: center; margin: 0 0 16px 0; }
-    .input-group { position: relative; margin-bottom: 14px; }
-    .input-group label { position: absolute; top: -8px; left: 12px; background: #161922; padding: 0 4px; font-size: 0.65rem; color: #38bdf8; font-weight: 600; }
-    .input-group input { width: 100%; background: #0b0d12; border: 1px solid #2a2e3d; color: #fff; border-radius: 10px; padding: 12px 12px 12px 38px; font-size: 0.9rem; outline: none; }
-    .input-group i.input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-    .auth-box button.submit-btn { width: 100%; padding: 12px; background: #232734; color: #64748b; border: 1px solid #2a2e3d; font-weight: 600; border-radius: 10px; cursor: not-allowed; font-size: 0.9rem; }
-    .auth-box button.submit-btn.valid-btn { background: #22c55e; color: #052e16; border-color: #22c55e; cursor: pointer; }
-    .auth-box .switch-mode { font-size: 0.78rem; text-align: center; color: #94a3b8; margin-top: 16px; cursor: pointer; }
-    .auth-box .switch-mode span { color: #38bdf8; font-weight: 600; }
-    .confirm-box { background: #161922; border: 1px solid #ef4444; padding: 24px; border-radius: 20px; width: 100%; max-width: 340px; text-align: center; }
-    .confirm-box h4 { margin: 0 0 8px 0; color: #fff; }
-    .confirm-actions { display: flex; gap: 10px; margin-top: 20px; }
-    .confirm-btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
-    .confirm-btn.danger { background: #ef4444; color: #fff; }
-    .confirm-btn.cancel { background: #232734; color: #94a3b8; }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: #fff;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pro-badge {
+      background: #1E1B4B;
+      color: var(--primary-light);
+      border: 1px solid #3730A3;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Tabs Switch */
+    .tabs-switch {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    .tab-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Content Pages */
+    .page {
+      display: none;
+      padding: 16px;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .page.active {
+      display: flex;
+    }
+
+    /* Search & Filter Bar */
+    .search-box {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px 12px 42px;
+      color: var(--text-primary);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      fill: var(--primary-light);
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+
+    .filter-chips::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* Section Header */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-primary);
+    }
+
+    .btn-refresh {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--primary-light);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.2s;
+    }
+
+    .btn-refresh:hover {
+      background: var(--surface-elevated);
+    }
+
+    /* Room Cards */
+    .rooms-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .room-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .room-card:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .verified-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: var(--primary-light);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2.5px 7px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+
+    .status-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2.5px 7px;
+      border-radius: 6px;
+      margin-left: 6px;
+    }
+
+    .status-active {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success-light);
+    }
+
+    .status-paused {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .card-location {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 3px;
+    }
+
+    .card-price-box {
+      text-align: right;
+    }
+
+    .card-price {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--primary-light);
+    }
+
+    .card-price-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Photo Carousel Container with Protective Mask Layer */
+    .carousel-box {
+      position: relative;
+      width: 100%;
+      height: 230px;
+      border-radius: 14px;
+      background: var(--surface-elevated);
+      overflow: hidden;
+    }
+
+    .carousel-slides {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      transition: transform 0.3s ease;
+    }
+
+    .carousel-slide {
+      min-width: 100%;
+      height: 100%;
+      position: relative;
+      background: #000;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* CRITICAL REQUIREMENT IMPLEMENTATION:
+       Protective dark scrim layer placed over the photo bottom.
+       It permanently shields any device ID, watermark, or bottom footer text
+       so that it is NEVER visible to anyone! */
+    .carousel-protective-layer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 72px;
+      background: linear-gradient(to top, #0D0F17 0%, rgba(13, 15, 23, 0.85) 50%, transparent 100%);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.65);
+      border: none;
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+    }
+
+    .carousel-prev { left: 8px; }
+    .carousel-next { right: 8px; }
+
+    .carousel-dots {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 5px;
+      z-index: 5;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.4);
+      transition: all 0.2s;
+    }
+
+    .dot.active {
+      width: 16px;
+      background: #fff;
+    }
+
+    .carousel-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      z-index: 5;
+    }
+
+    /* Details container */
+    .card-details {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Action buttons */
+    .card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-call {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-call:hover {
+      background: #059669;
+    }
+
+    .btn-wa {
+      background: transparent;
+      border: 1px solid rgba(52, 211, 153, 0.5);
+      color: var(--success-light);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-wa:hover {
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .btn-icon {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Owner Screen Styles */
+    .owner-auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .auth-icon-circle {
+      width: 56px;
+      height: 56px;
+      background: rgba(99, 102, 241, 0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-icon-circle svg {
+      width: 28px;
+      height: 28px;
+      fill: var(--primary-light);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .owner-profile-bar {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--danger);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Form Card */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .form-input, .form-textarea {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Photo Drop Zone */
+    .photo-drop-zone {
+      border: 1px dashed rgba(99, 102, 241, 0.5);
+      background: var(--surface-elevated);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .photo-drop-zone svg {
+      width: 32px;
+      height: 32px;
+      fill: var(--primary-light);
+    }
+
+    .photo-previews {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin-top: 4px;
+    }
+
+    .photo-thumb {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .btn-remove-thumb {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Upload Progress Box */
+    .progress-box {
+      background: var(--surface-elevated);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #1E2238;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Modal Dialog */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px;
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .toggle-auth-prompt {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .toggle-auth-prompt span {
+      color: var(--primary-light);
+      font-weight: 700;
+    }
+
+    .empty-state {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 32px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .empty-state svg {
+      width: 44px;
+      height: 44px;
+      fill: var(--text-muted);
+    }
   </style>
 </head>
 <body>
 
-  <div class="toast-container" id="toastContainer"></div>
-
-  <!-- Live Upload Status Bar -->
-  <div class="upload-progress-box" id="uploadProgressBox">
-    <div class="upload-progress-info">
-      <span id="uploadFileName">Uploading file...</span>
-      <span id="uploadPercentText">0%</span>
-    </div>
-    <div class="progress-track">
-      <div class="progress-fill" id="progressFill"></div>
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="header">
-      <div class="user-profile">
-        <div class="avatar-wrapper">
-          <div class="avatar" id="avatarDisplay">CH</div>
+<div class="app-container">
+  <!-- App Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M17 11V3H7v4H3v14h18V11h-4zm-6-6h4v2h-4V5zm-4 4h4v2H7V9zm-2 4h4v2H5v-2zm0 4h4v2H5v-2zm14 2h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4v-2h4v2zm-6 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2z"/></svg>
+      </div>
+      <div>
+        <div class="brand-title">
+          RoomFinder <span class="pro-badge">PRO</span>
         </div>
-        <div class="user-info">
-          <h2 class="app-title">Unlimited Hub</h2>
-          <div class="status-badge">
-            ID: <span id="devCode">...</span> • <span class="secured" id="secStatus"> Connected <i class="fa-solid fa-lock"></i></span>
+        <div class="brand-sub">Student & Owner Hub</div>
+      </div>
+    </div>
+
+    <!-- Segmented Tab Switch -->
+    <div class="tabs-switch">
+      <button class="tab-btn active" id="tabBtnStudents" onclick="switchTab('students')">
+        <svg viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3 1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
+        स्टूडेंट्स
+      </button>
+      <button class="tab-btn" id="tabBtnOwners" onclick="switchTab('owners')">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        रूम ओनर
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= STUDENTS PAGE ================= -->
+  <section class="page active" id="pageStudents">
+    <!-- Search Bar -->
+    <div class="search-box">
+      <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" class="search-input" id="studentSearchInput" placeholder="कमरा, एरिया या शहर खोजें (उदा: Boring Road)" oninput="filterRooms()">
+    </div>
+
+    <!-- Budget Filters -->
+    <div class="filter-chips">
+      <div class="chip active" onclick="setBudgetFilter(null, this)">सभी (All)</div>
+      <div class="chip" onclick="setBudgetFilter(3000, this)">₹3,000 तक</div>
+      <div class="chip" onclick="setBudgetFilter(5000, this)">₹5,000 तक</div>
+      <div class="chip" onclick="setBudgetFilter(10000, this)">₹10,000 तक</div>
+    </div>
+
+    <!-- Section Header -->
+    <div class="section-header">
+      <div class="section-title">
+        <svg style="width:16px;height:16px;fill:var(--primary-light)" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        उपलब्ध कमरे (<span id="roomsCountText">0</span>)
+      </div>
+      <button class="btn-refresh" onclick="fetchRooms()">
+        <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        रिफ्रेश करें
+      </button>
+    </div>
+
+    <!-- Rooms Container -->
+    <div class="rooms-list" id="roomsListContainer">
+      <div class="empty-state">कमरे लोड हो रहे हैं...</div>
+    </div>
+  </section>
+
+  <!-- ================= OWNER PAGE ================= -->
+  <section class="page" id="pageOwners">
+    <!-- Unauthenticated View -->
+    <div id="ownerAuthPrompt" class="owner-auth-card" style="display:none;">
+      <div class="auth-icon-circle">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+      </div>
+      <h3 style="font-size:17px;font-weight:700">ओनर पोर्टल लॉगिन / रजिस्ट्रेशन</h3>
+      <p style="font-size:12px;color:var(--text-secondary);max-width:320px;line-height:1.5;">
+        अपने कमरे जोड़ने और मैनेज करने के लिए अपनी 5-Digit ID से लॉगिन या रजिस्टर करें।
+      </p>
+      <button class="btn-primary" style="margin-top:10px" onclick="openAuthModal(true)">
+        Login / Register करें
+      </button>
+    </div>
+
+    <!-- Authenticated Dashboard View -->
+    <div id="ownerDashboard" style="display:none; flex-direction:column; gap:16px;">
+      <!-- Profile Bar -->
+      <div class="owner-profile-bar">
+        <div>
+          <div style="font-size:11px;color:var(--text-muted)">लॉगिन ओनर आईडी</div>
+          <div style="font-size:16px;font-weight:700;color:var(--primary-light)" id="displayOwnerId">-----</div>
+        </div>
+        <button class="btn-logout" onclick="logoutOwner()">लॉग आउट</button>
+      </div>
+
+      <!-- Add / Edit Room Form -->
+      <div class="form-card">
+        <h4 style="font-size:15px;font-weight:700" id="formHeaderTitle">नया कमरा जोड़ें (Add Room)</h4>
+
+        <div class="form-group">
+          <label class="form-label">रूम शीर्षक (Room Title) *</label>
+          <input type="text" class="form-input" id="inputTitle" placeholder="उदा: Single Room for Student">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">एरिया / लोकेशन *</label>
+            <input type="text" class="form-input" id="inputLocation" placeholder="उदा: Boring Road">
+          </div>
+          <div class="form-group">
+            <label class="form-label">किराया (₹ प्रति माह) *</label>
+            <input type="number" class="form-input" id="inputPrice" placeholder="उदा: 4500">
           </div>
         </div>
+
+        <div class="form-group">
+          <label class="form-label">संपर्क नंबर (Contact Number) *</label>
+          <input type="tel" class="form-input" id="inputPhone" placeholder="उदा: 9876543210">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">कमरे की पूरी जानकारी (Facilities / Details) *</label>
+          <textarea class="form-textarea" id="inputDetails" rows="3" placeholder="सुविधाएं: वाई-फाई, आरओ पानी, 24 घंटे बिजली..."></textarea>
+        </div>
+
+        <!-- Photo Picker -->
+        <div class="form-group">
+          <label class="form-label">कमरे की फोटो (1 से 4 फोटो) *</label>
+          <div class="photo-drop-zone" onclick="document.getElementById('photoFileInput').click()">
+            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+            <div style="font-size:13px;font-weight:600">गैलरी से फोटो चुनें</div>
+            <div style="font-size:11px;color:var(--text-muted)">Click to choose up to 4 images</div>
+          </div>
+          <input type="file" id="photoFileInput" multiple accept="image/*" style="display:none" onchange="handlePhotosSelected(event)">
+          <div class="photo-previews" id="photoPreviewsBox"></div>
+        </div>
+
+        <!-- Upload Progress State -->
+        <div class="progress-box" id="uploadProgressBox" style="display:none;">
+          <div style="font-size:12px;font-weight:600" id="uploadStatusText">अपलोड हो रहा है...</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="uploadProgressFill"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted)" id="uploadSubText">कृपया प्रतीक्षा करें</div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" id="btnSubmitRoom" onclick="submitRoomForm()">
+            पब्लिश करें (Publish Room) 🚀
+          </button>
+          <button class="btn-logout" id="btnCancelEdit" style="display:none;" onclick="resetForm()">
+            रद्द करें
+          </button>
+        </div>
       </div>
-      <div class="header-actions" id="topBtnsContainer"></div>
+
+      <!-- My Listings Section -->
+      <div class="section-header">
+        <div class="section-title">मेरे जोड़े गए कमरे (<span id="ownerRoomsCountText">0</span>)</div>
+      </div>
+      <div class="rooms-list" id="ownerRoomsListContainer"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= AUTH MODAL DIALOG ================= -->
+<div class="modal-backdrop" id="authModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 style="font-size:18px;font-weight:800" id="authModalTitle">Login Account</h3>
+      <button class="btn-close" onclick="closeAuthModal()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-secondary);">
+      कमरे अपलोड व मैनेज करने के लिए अपना 5-Digit ID और पासवर्ड दर्ज करें।
+    </p>
+
+    <div class="form-group">
+      <label class="form-label">5 Digit ID</label>
+      <input type="number" class="form-input" id="authDeviceId" placeholder="उदा: 48213" maxlength="5">
     </div>
 
-    <!-- केवल इमेज/फोटो सेलेक्ट करने के लिए accept="image/*" और multiple जोड़ा गया है -->
-    <input type="file" id="hiddenFileInput" accept="image/*" multiple style="display: none;" onchange="uploadFilesSequentially()">
-
-    <div class="nav-pill">
-      <button class="nav-btn active" id="tabGalleryBtn" onclick="toggleView('gallery')">
-        <i class="fa-regular fa-image"></i> Gallery
-      </button>
-      <button class="nav-btn" id="tabNotesBtn" onclick="toggleView('notes')">
-        <i class="fa-regular fa-note-sticky"></i> Notes
-      </button>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="authPassword" placeholder="पासवर्ड दर्ज करें">
     </div>
 
-    <div class="view-section active" id="gallerySection">
-      <div class="gallery-grid" id="gallery"></div>
-    </div>
+    <div id="authErrorMsg" style="color:var(--danger);font-size:12px;display:none;text-align:center;"></div>
 
-    <div class="view-section" id="notesSection">
-      <div class="note-box-wrapper">
-        <div class="note-box-title">New Note</div>
-        <textarea id="noteInput" placeholder="Write your cloud note here..."></textarea>
-        <button class="save-note-btn" onclick="saveNote()">
-          <i class="fa-solid fa-lock" style="font-size:0.8rem;"></i> Save Note
+    <button class="btn-primary" id="btnAuthSubmit" onclick="submitAuth()">
+      Login
+    </button>
+
+    <div class="toggle-auth-prompt" onclick="toggleAuthMode()">
+      <span id="authToggleText">नया ID चाहिए? Register करें</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= JAVASCRIPT APP LOGIC ================= -->
+<script>
+  const FIREBASE_DB = "https://neetjee-ca8f5-default-rtdb.firebaseio.com/rooms";
+  const AUTH_API = "https://secret-ol9o.onrender.com/api";
+
+  let allRooms = [];
+  let selectedBudget = null;
+  let currentOwnerId = localStorage.getItem("rf_owner_id") || "";
+  let isLoginMode = true;
+  let selectedFiles = [];
+  let editingRoomId = null;
+  let existingEmbedCodes = [];
+
+  // Init App
+  window.addEventListener("DOMContentLoaded", () => {
+    updateOwnerUi();
+    fetchRooms();
+  });
+
+  // Switch Tab
+  function switchTab(tab) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+
+    if (tab === "students") {
+      document.getElementById("tabBtnStudents").classList.add("active");
+      document.getElementById("pageStudents").classList.add("active");
+      fetchRooms();
+    } else {
+      document.getElementById("tabBtnOwners").classList.add("active");
+      document.getElementById("pageOwners").classList.add("active");
+      updateOwnerUi();
+    }
+  }
+
+  // Fetch Rooms from Firebase Realtime Database
+  async function fetchRooms() {
+    try {
+      const res = await fetch(`${FIREBASE_DB}.json`);
+      const data = await res.json();
+      allRooms = [];
+
+      if (data && typeof data === "object") {
+        for (const key of Object.keys(data)) {
+          const item = data[key];
+          if (item) {
+            allRooms.push({
+              id: key,
+              owner_id: item.owner_id ? String(item.owner_id) : "",
+              title: item.title || "",
+              location: item.location || "",
+              price: item.price ? String(item.price) : "0",
+              phone: item.phone ? String(item.phone) : "",
+              details: item.details || "",
+              embed_codes: Array.isArray(item.embed_codes) ? item.embed_codes : (item.embed_code ? [item.embed_code] : []),
+              status: item.status || "Active",
+              timestamp: item.timestamp || 0
+            });
+          }
+        }
+      }
+
+      // Sort newest first
+      allRooms.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      renderStudentRooms();
+      renderOwnerRooms();
+    } catch (err) {
+      console.error("Failed to fetch rooms:", err);
+      document.getElementById("roomsListContainer").innerHTML = `
+        <div class="empty-state">
+          <div>कमरे लोड नहीं हो सके। इंटरनेट कनेक्शन जांचें।</div>
+          <button class="btn-refresh" onclick="fetchRooms()" style="margin-top:10px">दोबारा प्रयास करें</button>
+        </div>
+      `;
+    }
+  }
+
+  // Budget Filter
+  function setBudgetFilter(budget, el) {
+    selectedBudget = budget;
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    el.classList.add("active");
+    filterRooms();
+  }
+
+  // Filter Rooms
+  function filterRooms() {
+    renderStudentRooms();
+  }
+
+  // Extract direct high-res image URL from Telesco.pe or embed code
+  function resolvePhotoUrl(embedCode) {
+    if (!embedCode) return "";
+    if (embedCode.startsWith("http://") || embedCode.startsWith("https://")) {
+      return embedCode;
+    }
+    // Extract telegram post channel & ID: e.g. data-telegram-post="channel/123"
+    const match = embedCode.match(/data-telegram-post=["']([^"']+)["']/i);
+    if (match && match[1]) {
+      const parts = match[1].split("/");
+      if (parts.length >= 2) {
+        return `https://telesco.pe/i/${parts[0]}/${parts[1]}.jpg`;
+      }
+    }
+    return "";
+  }
+
+  // Render Students Rooms
+  function renderStudentRooms() {
+    const q = (document.getElementById("studentSearchInput").value || "").trim().toLowerCase();
+    const container = document.getElementById("roomsListContainer");
+
+    const filtered = allRooms.filter(r => {
+      const isActive = r.status.toLowerCase() !== "paused";
+      const matchesSearch = !q || r.title.toLowerCase().includes(q) || r.location.toLowerCase().includes(q) || r.details.toLowerCase().includes(q);
+      const parsedPrice = parseInt(r.price.replace(/\D/g, "")) || 0;
+      const matchesBudget = selectedBudget === null || parsedPrice <= selectedBudget;
+      return isActive && matchesSearch && matchesBudget;
+    });
+
+    document.getElementById("roomsCountText").innerText = filtered.length;
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <h4 style="font-size:15px;font-weight:700">कोई कमरा नहीं मिला</h4>
+          <p style="font-size:12px;color:var(--text-secondary)">कृपया बाद में देखें या सर्च फिल्टर बदलें।</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filtered.map(room => buildRoomCardHtml(room, false)).join("");
+  }
+
+  // Build Room Card HTML with Device ID Masking & Photo Carousel
+  function buildRoomCardHtml(room, isOwner) {
+    const photos = room.embed_codes.map(resolvePhotoUrl).filter(u => u.length > 0);
+    const carouselId = `carousel_${room.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+    let carouselHtml = "";
+    if (photos.length === 0) {
+      carouselHtml = `
+        <div class="carousel-box" style="display:flex;align-items:center;justify-content:center;">
+          <svg style="width:48px;height:48px;fill:#64748B" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        </div>
+      `;
+    } else {
+      const slides = photos.map((p, idx) => `
+        <div class="carousel-slide">
+          <img src="${p}" alt="${room.title}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80'">
+          <!-- CRITICAL: Protective dark scrim layer that shields the bottom region so device ID is 100% hidden! -->
+          <div class="carousel-protective-layer"></div>
+        </div>
+      `).join("");
+
+      const dots = photos.length > 1 ? `
+        <div class="carousel-dots" id="dots_${carouselId}">
+          ${photos.map((_, idx) => `<div class="dot ${idx === 0 ? 'active' : ''}"></div>`).join("")}
+        </div>
+      ` : "";
+
+      const arrows = photos.length > 1 ? `
+        <button class="carousel-btn carousel-prev" onclick="slideCarousel('${carouselId}', -1, ${photos.length})">❮</button>
+        <button class="carousel-btn carousel-next" onclick="slideCarousel('${carouselId}', 1, ${photos.length})">❯</button>
+      ` : "";
+
+      carouselHtml = `
+        <div class="carousel-box" id="${carouselId}" data-index="0">
+          <div class="carousel-slides" id="slides_${carouselId}">
+            ${slides}
+          </div>
+          ${arrows}
+          ${dots}
+          <div class="carousel-badge" id="badge_${carouselId}">1 / ${photos.length}</div>
+        </div>
+      `;
+    }
+
+    const isPaused = room.status.toLowerCase() === "paused";
+    const statusBadge = isOwner ? `
+      <span class="status-pill ${isPaused ? 'status-paused' : 'status-active'}">${isPaused ? 'Paused' : 'Active'}</span>
+    ` : "";
+
+    const bottomRow = isOwner ? `
+      <div class="card-actions">
+        <div style="font-size:11px;color:var(--text-muted)">ID: ${room.owner_id}</div>
+        <div class="action-group">
+          <button class="btn-wa" onclick="editRoom('${room.id}')">✏️ Edit</button>
+          <button class="btn-wa" onclick="toggleStatus('${room.id}', '${room.status}')">${isPaused ? '▶ Active करें' : '⏸ Pause करें'}</button>
+          <button class="btn-logout" onclick="deleteRoom('${room.id}')">🗑 Delete</button>
+        </div>
+      </div>
+    ` : `
+      <div class="card-actions">
+        <div class="action-group">
+          <a href="tel:${room.phone}" class="btn-call">
+            <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            ${room.phone || 'कॉल करें'}
+          </a>
+          <a href="https://api.whatsapp.com/send?phone=91${room.phone.replace(/\\D/g, '')}&text=${encodeURIComponent("नमस्ते, मुझे RoomFinder PRO पर आपका कमरा '" + room.title + "' पसंद आया। क्या यह उपलब्ध है?")}" target="_blank" class="btn-wa">
+            💬 WhatsApp
+          </a>
+        </div>
+        <button class="btn-icon" onclick="shareRoom('${room.title}', '${room.location}', '${room.price}')">
+          <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
         </button>
       </div>
-      <div class="section-subtitle" id="notesCountTitle">Saved Notes</div>
-      <div id="notesList"></div>
-    </div>
-  </div>
+    `;
 
-  <div class="action-bar" id="actionBar">
-    <span id="selectedCountText" style="font-size: 0.85rem; color: #38bdf8; font-weight: 600;">0 selected</span>
-    <button class="delete-btn-bar" onclick="deleteSelectedPhotos()">Delete</button>
-    <button class="cancel-select-btn" onclick="clearSelection()">Cancel</button>
-  </div>
+    return `
+      <div class="room-card">
+        <div class="card-top">
+          <div>
+            <div style="display:flex;align-items:center;">
+              <span class="verified-pill">✓ Verified Room</span>
+              ${statusBadge}
+            </div>
+            <div class="card-title">${escapeHtml(room.title)}</div>
+            <div class="card-location">📍 ${escapeHtml(room.location)}</div>
+          </div>
+          <div class="card-price-box">
+            <div class="card-price">₹${escapeHtml(room.price)}</div>
+            <div class="card-price-sub">प्रति माह</div>
+          </div>
+        </div>
 
-  <!-- Zoom Modal -->
-  <div class="modal" id="imgModal">
-    <div class="modal-top-actions">
-      <button class="modal-action-btn modal-delete-btn" id="modalDeleteBtn" onclick="deleteCurrentModalPhoto()" title="Delete Photo"><i class="fa-solid fa-trash"></i></button>
-      <button class="modal-action-btn" onclick="closeZoom()" title="Close">✕</button>
-    </div>
+        ${carouselHtml}
 
-    <button class="modal-nav-btn modal-prev" id="modalPrevBtn" onclick="navigateModal(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-    <button class="modal-nav-btn modal-next" id="modalNextBtn" onclick="navigateModal(1)"><i class="fa-solid fa-chevron-right"></i></button>
-    
-    <div class="modal-content-container" id="modalContentContainer">
-      <div class="modal-date" id="modalDate"></div>
-      
-      <div class="modal-loadmore-screen" id="modalLoadMoreScreen">
-        <i class="fa-solid fa-images" style="font-size: 2.5rem; color: #38bdf8;"></i>
-        <h3>You have reached the end of loaded photos</h3>
-        <button class="modal-load-btn" onclick="modalLoadMoreAction()"><i class="fa-solid fa-rotate"></i> Load More Photos</button>
+        ${room.details ? `<div class="card-details">${escapeHtml(room.details)}</div>` : ''}
+
+        ${bottomRow}
       </div>
-    </div>
-  </div>
+    `;
+  }
 
-  <!-- Auth Modal -->
-  <div class="auth-overlay" id="authModal">
-    <div class="auth-box">
-      <button class="close-auth-modal" id="closeAuthBtn" onclick="closeAuthModal()" style="display: none; position: absolute; top: 16px; right: 16px; background: transparent; color: #94a3b8; border: none; cursor: pointer;">✕</button>
-      <h3 id="authTitle">Login Account</h3>
-      <p id="authSubTitle">Enter your ID and password to access your secure cloud.</p>
+  // Slide Carousel
+  function slideCarousel(carouselId, direction, totalSlides) {
+    const el = document.getElementById(carouselId);
+    if (!el) return;
+    let idx = parseInt(el.getAttribute("data-index") || "0");
+    idx = (idx + direction + totalSlides) % totalSlides;
+    el.setAttribute("data-index", idx);
 
-      <div class="input-group">
-        <label>5 Digit ID</label>
-        <i class="fa-solid fa-key input-icon"></i>
-        <input type="text" id="authIdInput" oninput="validateAuthInputs()">
-      </div>
-      
-      <div class="input-group">
-        <label>Password</label>
-        <i class="fa-solid fa-lock input-icon"></i>
-        <input type="password" id="authPassInput" placeholder="Enter password" oninput="validateAuthInputs()">
-      </div>
-
-      <button class="submit-btn" id="authBtn" onclick="submitAuth()">Login</button>
-      <div class="switch-mode" id="switchText" onclick="toggleAuthMode()">Don't have an ID? <span>Register Here</span></div>
-    </div>
-  </div>
-
-  <!-- Logout Warning Modal -->
-  <div class="confirm-overlay" id="logoutConfirmModal">
-    <div class="confirm-box">
-      <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.5rem; color: #ef4444; margin-bottom: 12px;"></i>
-      <h4>Warning!</h4>
-      <p style="font-size: 0.82rem; color: #94a3b8;">Are you sure you want to log out?</p>
-      <div class="confirm-actions">
-        <button class="confirm-btn cancel" onclick="closeLogoutConfirm()">Cancel</button>
-        <button class="confirm-btn danger" onclick="confirmLogout()">Yes, Logout</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const API_BASE = "https://pdf-chaker-1.onrender.com/api";
-
-    const firebaseConfig = {
-      databaseURL: "https://newfire-2258c-default-rtdb.firebaseio.com/"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    let isLoginMode = true;
-    let memorySessionAuth = localStorage.getItem('is_authenticated') === 'true';
-    let currentTab = 'gallery';
-    
-    let selectedPhotoIds = new Set();
-    let isSelectionMode = false;
-    let isUploading = false;
-
-    let loadedPhotosList = [];
-    let allFetchedRawData = [];
-    let currentIndex = 0;
-    let currentModalIndex = 0;
-
-    // Heartbeat script to keep Render & Cleaner active when HTML is open
-    setInterval(() => {
-      fetch(`${API_BASE}/heartbeat`, { method: 'POST' }).catch(err => console.log("Heartbeat failed"));
-    }, 20000);
-
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.innerText = message;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
+    const slidesContainer = document.getElementById(`slides_${carouselId}`);
+    if (slidesContainer) {
+      slidesContainer.style.transform = `translateX(-${idx * 100}%)`;
     }
 
-    function initUser() {
-      let devId = localStorage.getItem('device_5digit_code') || Math.floor(10000 + Math.random() * 90000).toString();
-      localStorage.setItem('device_5digit_code', devId);
-      document.getElementById('devCode').innerText = devId;
-
-      updateHeaderButtons();
-
-      if (!memorySessionAuth) {
-        showAuthPopup(true);
-      } else {
-        loadInitialData(devId);
-      }
+    const badge = document.getElementById(`badge_${carouselId}`);
+    if (badge) {
+      badge.innerText = `${idx + 1} / ${totalSlides}`;
     }
 
-    const DEVICE_ID = () => localStorage.getItem('device_5digit_code');
-
-    function updateHeaderButtons() {
-      const container = document.getElementById('topBtnsContainer');
-      container.innerHTML = memorySessionAuth 
-        ? `${currentTab==='gallery' ? '<button class="circle-btn upload-btn" onclick="triggerUpload()"><i class="fa-solid fa-plus"></i></button>':''}<button class="circle-btn logout-icon-btn" onclick="showLogoutWarning()"><i class="fa-solid fa-power-off"></i></button>`
-        : `<button class="circle-btn" onclick="openLoginModal()"><i class="fa-solid fa-key"></i></button>`;
-    }
-
-    function toggleView(tab) {
-      if (!memorySessionAuth) return showAuthPopup(true);
-      currentTab = tab;
-      document.getElementById('gallerySection').classList.toggle('active', tab === 'gallery');
-      document.getElementById('notesSection').classList.toggle('active', tab === 'notes');
-      document.getElementById('tabGalleryBtn').classList.toggle('active', tab === 'gallery');
-      document.getElementById('tabNotesBtn').classList.toggle('active', tab === 'notes');
-      updateHeaderButtons();
-      if(tab === 'gallery') {
-        loadInitialData(DEVICE_ID());
-      } else {
-        loadNotes(DEVICE_ID());
-      }
-    }
-
-    // Updated video check function using database flag & fallback URL check
-    function isVideoFile(p) {
-      if (p.is_video === true) return true;
-      if (!p.url) return false;
-      const cleanUrl = p.url.split('?')[0].toLowerCase();
-      return cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.ogg') || cleanUrl.endsWith('.mov') || cleanUrl.endsWith('.mkv') || cleanUrl.endsWith('.avi') || cleanUrl.endsWith('.3gp') || p.url.includes('video');
-    }
-
-    function loadInitialData(targetId) {
-      if (!memorySessionAuth) return;
-
-      const galleryContainer = document.getElementById('gallery');
-      galleryContainer.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#38bdf8;'><i class='fa-solid fa-spinner fa-spin'></i> Loading from Firebase...</p>";
-
-      loadedPhotosList = [];
-      allFetchedRawData = [];
-      currentIndex = 0;
-
-      db.ref(`photos/${targetId}`).once('value', (snapshot) => {
-        const photos = snapshot.val();
-        if (!photos) {
-          galleryContainer.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>No media found.</p>";
-          return;
-        }
-
-        allFetchedRawData = Object.values(photos).reverse();
-        loadMoreItems();
+    const dotsContainer = document.getElementById(`dots_${carouselId}`);
+    if (dotsContainer) {
+      dotsContainer.querySelectorAll(".dot").forEach((d, i) => {
+        d.classList.toggle("active", i === idx);
       });
+    }
+  }
 
-      loadNotes(targetId);
+  // Share room
+  function shareRoom(title, loc, price) {
+    const text = `RoomFinder PRO पर उपलब्ध कमरा:\n${title}\nस्थान: ${loc}\nकिराया: ₹${price}/माह`;
+    if (navigator.share) {
+      navigator.share({ title, text, url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(text);
+      alert("कमरे की जानकारी कॉपी हो गई!");
+    }
+  }
+
+  // ================= OWNER UI & CRUD =================
+  function updateOwnerUi() {
+    if (currentOwnerId) {
+      document.getElementById("ownerAuthPrompt").style.display = "none";
+      document.getElementById("ownerDashboard").style.display = "flex";
+      document.getElementById("displayOwnerId").innerText = currentOwnerId;
+      renderOwnerRooms();
+    } else {
+      document.getElementById("ownerAuthPrompt").style.display = "flex";
+      document.getElementById("ownerDashboard").style.display = "none";
+    }
+  }
+
+  function renderOwnerRooms() {
+    if (!currentOwnerId) return;
+    const container = document.getElementById("ownerRoomsListContainer");
+    const myRooms = allRooms.filter(r => String(r.owner_id) === String(currentOwnerId));
+
+    document.getElementById("ownerRoomsCountText").innerText = myRooms.length;
+
+    if (myRooms.length === 0) {
+      container.innerHTML = `<div class="empty-state">आपने अभी तक कोई कमरा नहीं जोड़ा है।</div>`;
+      return;
     }
 
-    function loadMoreItems() {
-      const nextBatch = allFetchedRawData.slice(currentIndex, currentIndex + 12);
-      loadedPhotosList = loadedPhotosList.concat(nextBatch);
-      currentIndex += 12;
-      renderGalleryList();
+    container.innerHTML = myRooms.map(r => buildRoomCardHtml(r, true)).join("");
+  }
+
+  // Photo Selection
+  function handlePhotosSelected(event) {
+    const files = Array.from(event.target.files);
+    selectedFiles = (selectedFiles.concat(files)).slice(0, 4);
+    renderPhotoPreviews();
+  }
+
+  function renderPhotoPreviews() {
+    const container = document.getElementById("photoPreviewsBox");
+    container.innerHTML = selectedFiles.map((file, idx) => `
+      <div class="photo-thumb">
+        <img src="${URL.createObjectURL(file)}" alt="thumb">
+        <button class="btn-remove-thumb" onclick="removePhoto(${idx})">✕</button>
+      </div>
+    `).join("");
+  }
+
+  function removePhoto(idx) {
+    selectedFiles.splice(idx, 1);
+    renderPhotoPreviews();
+  }
+
+  // Submit Room
+  async function submitRoomForm() {
+    if (!currentOwnerId) {
+      openAuthModal(true);
+      return;
     }
 
-    function loadNotes(targetId) {
-      const notesList = document.getElementById('notesList');
-      db.ref(`notes/${targetId}`).on('value', (snapshot) => {
-        const notes = snapshot.val();
-        notesList.innerHTML = "";
-        if (!notes) {
-          document.getElementById('notesCountTitle').innerText = "Saved Notes (0)";
-          notesList.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No notes found.</p>";
-          return;
-        }
+    const title = document.getElementById("inputTitle").value.trim();
+    const location = document.getElementById("inputLocation").value.trim();
+    const price = document.getElementById("inputPrice").value.trim();
+    const phone = document.getElementById("inputPhone").value.trim();
+    const details = document.getElementById("inputDetails").value.trim();
 
-        const notesArray = Object.entries(notes);
-        document.getElementById('notesCountTitle').innerText = `Saved Notes (${notesArray.length})`;
+    if (!title || !location || !price || !phone || !details) {
+      alert("कृपया सभी आवश्यक जानकारी भरें!");
+      return;
+    }
 
-        notesArray.reverse().forEach(([key, n]) => {
-          const card = document.createElement('div');
-          card.className = 'note-card';
-          card.innerHTML = `<div class="note-text">${n.text}</div>
-            <div class="note-actions">
-              <button class="note-action-btn" onclick="deleteNote('${key}')"><i class="fa-solid fa-trash"></i></button>
-            </div>`;
-          notesList.appendChild(card);
+    if (!editingRoomId && selectedFiles.length === 0) {
+      alert("कृपया कमरे की कम से कम 1 फोटो चुनें!");
+      return;
+    }
+
+    const progressBox = document.getElementById("uploadProgressBox");
+    const progressFill = document.getElementById("uploadProgressFill");
+    const statusText = document.getElementById("uploadStatusText");
+    const subText = document.getElementById("uploadSubText");
+    const submitBtn = document.getElementById("btnSubmitRoom");
+
+    progressBox.style.display = "flex";
+    submitBtn.disabled = true;
+
+    try {
+      const uploadedEmbeds = [];
+
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        statusText.innerText = `फोटो ${i + 1}/${selectedFiles.length} अपलोड हो रही है...`;
+        progressFill.style.width = `${Math.round(((i) / selectedFiles.length) * 85)}%`;
+        subText.innerText = "Telegram CDN में ट्रांसफर हो रहा है...";
+
+        const formData = new FormData();
+        formData.append("photo", file);
+        formData.append("deviceId", currentOwnerId);
+
+        const res = await fetch(`${AUTH_API}/upload`, {
+          method: "POST",
+          body: formData
         });
-      });
-    }
-
-    function renderGalleryList() {
-      const galleryContainer = document.getElementById('gallery');
-      galleryContainer.innerHTML = "";
-
-      if (loadedPhotosList.length === 0) {
-        galleryContainer.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#94a3b8;'>No media found.</p>";
-        return;
-      }
-
-      loadedPhotosList.forEach((p, index) => {
-        const card = document.createElement('div');
-        card.className = 'gallery-card' + (selectedPhotoIds.has(p.id) ? ' selected' : '');
-        
-        let formattedDate = "Synced";
-        if (p.date) {
-          const dateObj = new Date(p.date);
-          if (!isNaN(dateObj)) {
-            formattedDate = dateObj.toLocaleDateString('en-GB') + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          }
-        }
-
-        const isVideo = isVideoFile(p);
-
-        card.onclick = () => {
-          if (isSelectionMode) {
-            toggleSelectPhoto(p.id, card);
-          } else {
-            openModal(index);
-          }
-        };
-
-        card.oncontextmenu = (e) => {
-          e.preventDefault();
-          startSelectionMode(p.id, card);
-        };
-
-        let pressTimer;
-        card.ontouchstart = () => {
-          pressTimer = setTimeout(() => {
-            startSelectionMode(p.id, card);
-          }, 600);
-        };
-        card.ontouchend = () => clearTimeout(pressTimer);
-
-        let mediaElement = '';
-        if (isVideo) {
-          mediaElement = `<div class="video-icon-indicator"><i class="fa-solid fa-video"></i></div><video src="${p.url}" muted preload="metadata"></video>`;
+        const json = await res.json();
+        if (json && json.embed_code) {
+          uploadedEmbeds.push(json.embed_code);
         } else {
-          mediaElement = `<img src="${p.url}" loading="lazy">`;
+          throw new Error(json.message || "Upload failed");
         }
+      }
 
-        card.innerHTML = `${mediaElement}<div class="photo-date">${formattedDate}</div>`;
-        galleryContainer.appendChild(card);
+      statusText.innerText = "Firebase में डेटा सेव हो रहा है...";
+      progressFill.style.width = "95%";
+      subText.innerText = "बस एक पल...";
+
+      const finalEmbeds = uploadedEmbeds.length > 0 ? uploadedEmbeds : existingEmbedCodes;
+
+      const roomData = {
+        owner_id: currentOwnerId,
+        title,
+        location,
+        price,
+        phone,
+        details,
+        embed_codes: finalEmbeds,
+        status: "Active",
+        timestamp: Date.now()
+      };
+
+      const url = editingRoomId ? `${FIREBASE_DB}/${editingRoomId}.json` : `${FIREBASE_DB}.json`;
+      const method = editingRoomId ? "PUT" : "POST";
+
+      const dbRes = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(roomData)
       });
 
-      if (currentIndex < allFetchedRawData.length) {
-        const loadMoreDiv = document.createElement('div');
-        loadMoreDiv.className = 'load-more-container';
-        loadMoreDiv.innerHTML = `<button class="load-more-btn" onclick="loadMoreItems()">Load More (${allFetchedRawData.length - currentIndex} remaining)</button>`;
-        galleryContainer.appendChild(loadMoreDiv);
-      }
+      if (!dbRes.ok) throw new Error("Firebase error");
+
+      alert("कमरा सफलतापूर्वक सेव हो गया! ✅");
+      resetForm();
+      fetchRooms();
+    } catch (err) {
+      alert("त्रुटि: " + err.message);
+    } finally {
+      progressBox.style.display = "none";
+      submitBtn.disabled = false;
+    }
+  }
+
+  function editRoom(roomId) {
+    const room = allRooms.find(r => r.id === roomId);
+    if (!room) return;
+
+    editingRoomId = room.id;
+    existingEmbedCodes = room.embed_codes || [];
+    selectedFiles = [];
+    renderPhotoPreviews();
+
+    document.getElementById("formHeaderTitle").innerText = "कमरा अपडेट करें (Update Room)";
+    document.getElementById("inputTitle").value = room.title;
+    document.getElementById("inputLocation").value = room.location;
+    document.getElementById("inputPrice").value = room.price;
+    document.getElementById("inputPhone").value = room.phone;
+    document.getElementById("inputDetails").value = room.details;
+    document.getElementById("btnSubmitRoom").innerText = "अपडेट करें (Update Room)";
+    document.getElementById("btnCancelEdit").style.display = "block";
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resetForm() {
+    editingRoomId = null;
+    existingEmbedCodes = [];
+    selectedFiles = [];
+    renderPhotoPreviews();
+
+    document.getElementById("formHeaderTitle").innerText = "नया कमरा जोड़ें (Add Room)";
+    document.getElementById("inputTitle").value = "";
+    document.getElementById("inputLocation").value = "";
+    document.getElementById("inputPrice").value = "";
+    document.getElementById("inputPhone").value = "";
+    document.getElementById("inputDetails").value = "";
+    document.getElementById("btnSubmitRoom").innerText = "पब्लिश करें (Publish Room) 🚀";
+    document.getElementById("btnCancelEdit").style.display = "none";
+  }
+
+  async function toggleStatus(roomId, currentStatus) {
+    const newStatus = currentStatus.toLowerCase() === "paused" ? "Active" : "Paused";
+    try {
+      await fetch(`${FIREBASE_DB}/${roomId}/status.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newStatus)
+      });
+      fetchRooms();
+    } catch (e) {
+      alert("स्टेटस बदलने में विफल");
+    }
+  }
+
+  async function deleteRoom(roomId) {
+    if (!confirm("क्या आप सच में यह कमरा डिलीट करना चाहते हैं?")) return;
+    try {
+      await fetch(`${FIREBASE_DB}/${roomId}.json`, { method: "DELETE" });
+      fetchRooms();
+    } catch (e) {
+      alert("डिलीट करने में विफल");
+    }
+  }
+
+  // ================= AUTH MODAL =================
+  function openAuthModal(loginMode) {
+    isLoginMode = loginMode;
+    document.getElementById("authDeviceId").value = "";
+    document.getElementById("authPassword").value = "";
+    document.getElementById("authErrorMsg").style.display = "none";
+    updateAuthModalLabels();
+    document.getElementById("authModal").classList.add("active");
+  }
+
+  function closeAuthModal() {
+    document.getElementById("authModal").classList.remove("active");
+  }
+
+  function toggleAuthMode() {
+    isLoginMode = !isLoginMode;
+    updateAuthModalLabels();
+  }
+
+  function updateAuthModalLabels() {
+    document.getElementById("authModalTitle").innerText = isLoginMode ? "Login Account" : "Register Account";
+    document.getElementById("btnAuthSubmit").innerText = isLoginMode ? "Login" : "Register";
+    document.getElementById("authToggleText").innerHTML = isLoginMode ? "नया ID चाहिए? <span>Register करें</span>" : "पहले से ID है? <span>Login करें</span>";
+  }
+
+  async function submitAuth() {
+    const deviceId = document.getElementById("authDeviceId").value.trim();
+    const password = document.getElementById("authPassword").value.trim();
+    const errorEl = document.getElementById("authErrorMsg");
+    const btn = document.getElementById("btnAuthSubmit");
+
+    if (!deviceId || !password) {
+      errorEl.innerText = "कृपया ID और पासवर्ड दोनों भरें";
+      errorEl.style.display = "block";
+      return;
     }
 
-    function openModal(index) {
-      if (!memorySessionAuth) return;
-      currentModalIndex = index;
-      renderModalContent();
-      document.getElementById('imgModal').style.display = 'flex';
-    }
+    btn.disabled = true;
+    btn.innerText = "कृपया प्रतीक्षा करें...";
 
-    function renderModalContent() {
-      const loadMoreScreen = document.getElementById('modalLoadMoreScreen');
-      const prevBtn = document.getElementById('modalPrevBtn');
-      const nextBtn = document.getElementById('modalNextBtn');
-      const modalDate = document.getElementById('modalDate');
-      const modalDeleteBtn = document.getElementById('modalDeleteBtn');
-      
-      const container = document.getElementById('modalContentContainer');
-      const existingMedia = container.querySelector('img, video');
-      if (existingMedia) existingMedia.remove();
+    const endpoint = isLoginMode ? `${AUTH_API}/login` : `${AUTH_API}/register`;
 
-      if (currentModalIndex >= loadedPhotosList.length) {
-        loadMoreScreen.style.display = 'flex';
-        modalDate.style.display = 'none';
-        modalDeleteBtn.style.display = 'none';
-        prevBtn.style.display = 'flex';
-        nextBtn.style.display = 'none';
-        return;
-      }
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId, password })
+      });
+      const data = await res.json();
 
-      loadMoreScreen.style.display = 'none';
-      modalDate.style.display = 'block';
-      modalDeleteBtn.style.display = 'flex';
-      prevBtn.style.display = 'flex';
-      nextBtn.style.display = 'flex';
-
-      const p = loadedPhotosList[currentModalIndex];
-      if (!p) return;
-
-      let formattedDate = "Synced";
-      if (p.date) {
-        const dateObj = new Date(p.date);
-        if (!isNaN(dateObj)) {
-          formattedDate = dateObj.toLocaleDateString('en-GB') + " " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }
-      }
-
-      const isVideo = isVideoFile(p);
-      if (isVideo) {
-        const vid = document.createElement('video');
-        vid.src = p.url;
-        vid.controls = true;
-        vid.autoplay = true;
-        container.insertBefore(vid, modalDate);
-      } else {
-        const img = document.createElement('img');
-        img.src = p.url;
-        container.insertBefore(img, modalDate);
-      }
-
-      modalDate.innerText = "Date: " + formattedDate;
-    }
-
-    function navigateModal(direction) {
-      currentModalIndex += direction;
-      if (currentModalIndex < 0) currentModalIndex = 0;
-      else if (currentModalIndex > loadedPhotosList.length) currentModalIndex = loadedPhotosList.length;
-      renderModalContent();
-    }
-
-    function modalLoadMoreAction() {
-      if (currentIndex < allFetchedRawData.length) {
-        loadMoreItems();
-        currentModalIndex = loadedPhotosList.length - 1;
-        renderModalContent();
-        showToast("Loaded 12 more files!", "success");
-      }
-    }
-
-    function closeZoom() {
-      const container = document.getElementById('modalContentContainer');
-      const vid = container.querySelector('video');
-      if (vid) vid.pause();
-      document.getElementById('imgModal').style.display = 'none';
-    }
-
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const modalElement = document.getElementById('imgModal');
-    modalElement.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
-    modalElement.addEventListener('touchend', e => { 
-      touchEndX = e.changedTouches[0].screenX;
-      if (touchEndX < touchStartX - 50 && currentModalIndex < loadedPhotosList.length) navigateModal(1);
-      if (touchEndX > touchStartX + 50) navigateModal(-1);
-    }, false);
-
-    async function deleteCurrentModalPhoto() {
-      const p = loadedPhotosList[currentModalIndex];
-      if (!p || !memorySessionAuth) return;
-      showToast("Deleting file...", "info");
-
-      try {
-        const res = await fetch(`${API_BASE}/delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ device_id: DEVICE_ID(), photo_ids: [p.id] })
-        });
-        if (res.ok) {
-          showToast("File deleted!", "success");
-          closeZoom();
-          loadInitialData(DEVICE_ID());
-        }
-      } catch (err) {
-        showToast("Error deleting file!", "error");
-      }
-    }
-
-    function startSelectionMode(id, cardElement) {
-      isSelectionMode = true;
-      toggleSelectPhoto(id, cardElement);
-    }
-
-    function toggleSelectPhoto(id, cardElement) {
-      if (selectedPhotoIds.has(id)) {
-        selectedPhotoIds.delete(id);
-        cardElement.classList.remove('selected');
-      } else {
-        selectedPhotoIds.add(id);
-        cardElement.classList.add('selected');
-      }
-      const actionBar = document.getElementById('actionBar');
-      actionBar.style.display = selectedPhotoIds.size > 0 ? 'flex' : 'none';
-      document.getElementById('selectedCountText').innerText = `${selectedPhotoIds.size} selected`;
-      if (selectedPhotoIds.size === 0) isSelectionMode = false;
-    }
-
-    function clearSelection() {
-      selectedPhotoIds.clear();
-      isSelectionMode = false;
-      document.getElementById('actionBar').style.display = 'none';
-      document.querySelectorAll('.gallery-card').forEach(c => c.classList.remove('selected'));
-    }
-
-    async function deleteSelectedPhotos() {
-      if (!memorySessionAuth) return;
-      showToast("Deleting selected files...", "info");
-
-      try {
-        const res = await fetch(`${API_BASE}/delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ device_id: DEVICE_ID(), photo_ids: Array.from(selectedPhotoIds) })
-        });
-        if (res.ok) {
-          showToast("Files deleted!", "success");
-          clearSelection();
-          loadInitialData(DEVICE_ID());
-        }
-      } catch (err) {
-        showToast("Error deleting files!", "error");
-      }
-    }
-
-    function triggerUpload() {
-      if (!memorySessionAuth) return showAuthPopup(true);
-      if (isUploading) return;
-      const fileInput = document.getElementById('hiddenFileInput');
-      fileInput.value = ""; 
-      fileInput.click();
-    }
-
-    async function uploadFilesSequentially() {
-      const fileInput = document.getElementById('hiddenFileInput');
-      const files = fileInput.files;
-      if (!files || files.length === 0 || isUploading) return;
-
-      // 100 फोटो से ज्यादा सेलेक्ट होने पर Toast शो करने की कंडीशन
-      if (files.length > 100) {
-        showToast("Maximum 100 photos allowed at a time!", "error");
-        fileInput.value = "";
-        return;
+      if (!res.ok) {
+        throw new Error(data.message || "प्रमाणीकरण विफल रहा");
       }
 
-      isUploading = true;
-      const progressBox = document.getElementById('uploadProgressBox');
-      const progressFill = document.getElementById('progressFill');
-      const uploadFileName = document.getElementById('uploadFileName');
-      const uploadPercentText = document.getElementById('uploadPercentText');
-
-      progressBox.style.display = 'block';
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        uploadFileName.innerText = `Uploading (${i + 1}/${files.length}): ${file.name}`;
-        progressFill.style.width = '0%';
-        uploadPercentText.innerText = '0%';
-
-        await new Promise((resolve) => {
-          const xhr = new XMLHttpRequest();
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('device_id', DEVICE_ID());
-
-          xhr.open('POST', `${API_BASE}/upload`, true);
-
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const percent = Math.round((e.loaded / e.total) * 100);
-              progressFill.style.width = percent + '%';
-              uploadPercentText.innerText = percent + '%';
-            }
-          };
-
-          xhr.onload = () => {
-            if (xhr.status === 200) {
-              resolve();
-            } else {
-              showToast(`Failed: ${file.name}`, "error");
-              resolve();
-            }
-          };
-
-          xhr.onerror = () => {
-            showToast(`Network error on ${file.name}`, "error");
-            resolve();
-          };
-
-          xhr.send(formData);
-        });
-      }
-
-      progressBox.style.display = 'none';
-      isUploading = false;
-      fileInput.value = "";
-      showToast("All photos uploaded successfully!", "success");
-      loadInitialData(DEVICE_ID());
+      currentOwnerId = deviceId;
+      localStorage.setItem("rf_owner_id", deviceId);
+      closeAuthModal();
+      updateOwnerUi();
+      fetchRooms();
+    } catch (err) {
+      errorEl.innerText = err.message;
+      errorEl.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.innerText = isLoginMode ? "Login" : "Register";
     }
+  }
 
-    async function saveNote() {
-      const input = document.getElementById('noteInput');
-      const text = input.value.trim();
-      if (!text) return showToast("Enter text!", "error");
+  function logoutOwner() {
+    if (!confirm("क्या आप सच में लॉगआउट करना चाहते हैं?")) return;
+    currentOwnerId = "";
+    localStorage.removeItem("rf_owner_id");
+    updateOwnerUi();
+  }
 
-      try {
-        await fetch(`${API_BASE}/notes/add`, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ device_id: DEVICE_ID(), text }) 
-        });
-        input.value = "";
-        showToast("Note saved!", "success");
-      } catch (err) {
-        showToast("Error saving note!", "error");
-      }
-    }
-
-    async function deleteNote(id) {
-      try {
-        await fetch(`${API_BASE}/notes/delete`, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ device_id: DEVICE_ID(), note_id: id }) 
-        });
-        showToast("Note deleted!", "success");
-      } catch (err) {
-        showToast("Delete failed!", "error");
-      }
-    }
-
-    function validateAuthInputs() {
-      const valid = document.getElementById('authIdInput').value && document.getElementById('authPassInput').value;
-      document.getElementById('authBtn').classList.toggle('valid-btn', !!valid);
-    }
-
-    function showAuthPopup(login) {
-      isLoginMode = login;
-      document.getElementById('authModal').style.display = 'flex';
-      document.getElementById('authTitle').innerText = login ? "Login Account" : "Register Account";
-      document.getElementById('authBtn').innerText = login ? "Login" : "Register";
-      document.getElementById('switchText').innerHTML = login ? "Don't have an ID? <span>Register Here</span>" : "Already have an account? <span>Login Here</span>";
-    }
-
-    function openLoginModal() { showAuthPopup(true); }
-    function toggleAuthMode() { showAuthPopup(!isLoginMode); }
-
-    async function submitAuth() {
-      const device_id = document.getElementById('authIdInput').value.trim();
-      const password = document.getElementById('authPassInput').value.trim();
-      if (!device_id || !password) return;
-
-      const endpoint = isLoginMode ? `${API_BASE}/login` : `${API_BASE}/register`;
-
-      try {
-        const res = await fetch(endpoint, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ device_id, password }) 
-        });
-        const data = await res.json();
-        
-        if (data.success) {
-          localStorage.setItem('device_5digit_code', device_id);
-          memorySessionAuth = true; 
-          localStorage.setItem('is_authenticated', 'true');
-          document.getElementById('authModal').style.display = 'none';
-          initUser(); 
-          showToast(isLoginMode ? "Login successful!" : "Registered successfully!", "success");
-        } else {
-          showToast(data.error || "Authentication failed!", "error");
-        }
-      } catch (err) {
-        showToast("Connection error!", "error");
-      }
-    }
-
-    function showLogoutWarning() { document.getElementById('logoutConfirmModal').style.display = 'flex'; }
-    function closeLogoutConfirm() { document.getElementById('logoutConfirmModal').style.display = 'none'; }
-    
-    function confirmLogout() {
-      memorySessionAuth = false; 
-      localStorage.removeItem('is_authenticated');
-      closeLogoutConfirm();
-      initUser(); 
-      showToast("Logged out successfully", "info");
-    }
-
-    initUser();
-  </script>
+  function escapeHtml(str) {
+    return (str || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+</script>
 </body>
 </html>
