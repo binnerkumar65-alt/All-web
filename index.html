@@ -40,17 +40,12 @@
         .preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
         .preview-grid img { width: 100%; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #2e3459; }
 
-        /* ---- Photo Lightbox: click par photo real size (badi screen) me ---- */
-        .carousel-slide { cursor: zoom-in; }
-        .zoom-hint { position: absolute; inset: 0; z-index: 15; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.30); opacity: 0; transition: opacity 0.25s; pointer-events: none; }
-        .carousel-slide:hover .zoom-hint { opacity: 1; }
-        .zoom-hint i { color: #fff; font-size: 1.6rem; }
-        #lb-stage .lb-tg-box { position: relative; overflow: hidden; border-radius: 16px; background: #ececec; height: min(72vh, 640px); display: flex; align-items: center; justify-content: center; }
-        #lb-stage .lb-tg-box iframe { margin-top: -56px !important; width: 100% !important; min-height: calc(min(72vh, 640px) + 56px) !important; }
-        #lb-stage .lb-tg-box::after { content: ""; position: absolute; inset: 0; z-index: 10; background: transparent; }
-        #lb-stage .lb-tg-box::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: var(--lbCrop, 42px); background: linear-gradient(to top, #ececec 60%, rgba(236,236,236,0)); z-index: 11; border-radius: 0 0 16px 16px; }
+        /* ---- Full-size photo lightbox ---- */
+        .lightbox-embed-box { position: relative; overflow: hidden; border-radius: 16px; background: #1e2238; }
+        .lightbox-embed-box iframe { margin-top: -56px !important; width: 100% !important; display: block; }
+        .lightbox-embed-box::after { content: ""; position: absolute; inset: 0; z-index: 10; background: transparent; }
+        .lightbox-embed-box::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 42px; background: #1e2238; z-index: 11; border-radius: 0 0 16px 16px; }
     </style>
-<base target="_blank">
 </head>
 <body class="min-h-screen pb-12">
 
@@ -240,15 +235,14 @@
         </div>
     </div>
 
-    <!-- Photo Lightbox (click par photo real size / badi screen) -->
-    <div id="photo-lightbox" class="hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm items-center justify-center p-4" onclick="closePhotoLightbox()">
-        <button onclick="event.stopPropagation(); closePhotoLightbox()" class="absolute top-4 right-4 text-gray-300 hover:text-white bg-[#16192b] border border-gray-700 w-9 h-9 rounded-full text-sm z-20"><i class="fa-solid fa-xmark"></i></button>
-        <span id="lb-badge" class="absolute top-5 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-3 py-1 rounded-full z-20">1/1</span>
-        <button id="lb-prev" onclick="event.stopPropagation(); lbMove(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-indigo-600 text-white w-10 h-10 rounded-full z-20 items-center justify-center"><i class="fa-solid fa-chevron-left"></i></button>
-        <button id="lb-next" onclick="event.stopPropagation(); lbMove(1)" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-indigo-600 text-white w-10 h-10 rounded-full z-20 items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
-        <div class="w-full max-w-2xl" onclick="event.stopPropagation()">
-            <div id="lb-stage"></div>
-            <p class="text-center text-[11px] text-gray-400 mt-3"><i class="fa-solid fa-hand-pointer mr-1"></i>Real size view — Esc ya ✕ se band karein</p>
+    <!-- Full-size Photo Lightbox -->
+    <div id="photo-lightbox" class="hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm items-center justify-center p-4" onclick="closeLightbox()">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 text-white text-2xl z-[110] w-9 h-9 flex items-center justify-center bg-black/50 rounded-full">✕</button>
+        <div class="relative w-full max-w-md" id="lightbox-inner" onclick="event.stopPropagation()">
+            <div id="lightbox-embed-wrap"></div>
+            <span id="lightbox-badge" class="hidden absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-[105]"></span>
+            <button type="button" id="lightbox-prev" class="hidden carousel-btn prev" style="z-index:105;" onclick="lightboxMove(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+            <button type="button" id="lightbox-next" class="hidden carousel-btn next" style="z-index:105;" onclick="lightboxMove(1)"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
     </div>
 
@@ -262,8 +256,6 @@
         let currentOwnerId = localStorage.getItem("device_5digit_code") || "";
         let memorySessionAuth = localStorage.getItem("is_authenticated") === "true";
         let selectedFiles = [];
-        const embedRegistry = {};   // cardId -> embed codes array (lightbox ke liye)
-        let lbCardId = null, lbIndex = 0;
 
         window.onload = function() {
             if (memorySessionAuth && currentOwnerId) {
@@ -691,12 +683,8 @@
             const embeds = (room.embed_codes && room.embed_codes.length) ? room.embed_codes : (room.embed_code ? [room.embed_code] : []);
             if (embeds.length === 0) return '';
 
-            embedRegistry[cardId] = embeds;
-            const slidesHtml = embeds.map((code, i) => `
-                <div class="carousel-slide" onclick="openPhotoLightbox('${cardId}', ${i})" title="Photo bada karne ke liye click karein">
-                    <div class="tg-embed-box">${code}</div>
-                    <div class="zoom-hint"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
-                </div>
+            const slidesHtml = embeds.map(code => `
+                <div class="carousel-slide"><div class="tg-embed-box">${code}</div></div>
             `).join('');
 
             const dotsHtml = embeds.length > 1
@@ -710,7 +698,7 @@
             ` : '';
 
             return `
-                <div class="carousel-wrap" id="${cardId}" data-index="0" data-count="${embeds.length}">
+                <div class="carousel-wrap" id="${cardId}" data-index="0" data-count="${embeds.length}" onclick="openLightbox('${cardId}')" style="cursor: zoom-in;">
                     <div class="carousel-track">${slidesHtml}</div>
                     ${navHtml}
                     ${dotsHtml}
@@ -731,91 +719,74 @@
             if (badge) badge.innerText = `${idx + 1}/${count}`;
         }
 
-        // ---------- Photo Lightbox: student photo par click karne par real size (badi screen) view ----------
-        function openPhotoLightbox(cardId, index) {
-            const embeds = embedRegistry[cardId];
-            if (!embeds || !embeds.length) return;
-            lbCardId = cardId;
-            lbIndex = index;
-            const lb = document.getElementById('photo-lightbox');
-            lb.classList.remove('hidden');
-            lb.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-            renderLbSlide();
-        }
+        // ---------- Photo par click karne par full-size lightbox khulta hai (duplicate render se bachne ke liye already-loaded embed ko yahin move kiya jaata hai) ----------
+        let lightboxSourceWrap = null;
+        let lightboxIndex = 0;
+        let lightboxMovedBox = null;
+        let lightboxMovedOriginalParent = null;
 
-        function getSlideBox(cardId, index) {
+        function openLightbox(cardId) {
             const wrap = document.getElementById(cardId);
-            if (!wrap) return null;
-            const slides = wrap.querySelectorAll('.carousel-slide');
-            if (!slides[index]) return null;
-            return slides[index].querySelector('.tg-embed-box');
+            if (!wrap) return;
+            lightboxSourceWrap = wrap;
+            lightboxIndex = parseInt(wrap.getAttribute('data-index'), 10) || 0;
+            moveSlideToLightbox(lightboxIndex);
+            updateLightboxChrome();
+            const modal = document.getElementById('photo-lightbox');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
-        function renderLbSlide() {
-            const embeds = embedRegistry[lbCardId];
-            const stage = document.getElementById('lb-stage');
-            stage.innerHTML = '';
-            const liveBox = getSlideBox(lbCardId, lbIndex);
-
-            if (liveBox) {
-                // Card ka already-loaded iframe clone karo -> photo turant dikhti hai,
-                // Telegram widget ko dobara render karne ki zaroorat nahi (jo blank box ka kaaran tha)
-                const box = liveBox.cloneNode(true);
-                box.classList.remove('tg-embed-box');
-                box.classList.add('lb-tg-box');
-                stage.appendChild(box);
-                requestAnimationFrame(() => fitLightbox(box));
-            } else {
-                // Fallback: agar card ka iframe abhi load nahi hua to naya widget render karo
-                stage.innerHTML = `<div class="lb-tg-box">${embeds[lbIndex]}</div>`;
-                activateEmbedScripts(stage);
+        function moveSlideToLightbox(index) {
+            // Pehle wali photo ko wapas uski asli jagah bhej do
+            if (lightboxMovedBox && lightboxMovedOriginalParent) {
+                lightboxMovedBox.className = 'tg-embed-box';
+                lightboxMovedOriginalParent.appendChild(lightboxMovedBox);
             }
-
-            document.getElementById('lb-badge').innerText = `${lbIndex + 1}/${embeds.length}`;
-            const multi = embeds.length > 1;
-            document.getElementById('lb-prev').style.display = multi ? 'flex' : 'none';
-            document.getElementById('lb-next').style.display = multi ? 'flex' : 'none';
+            const slides = lightboxSourceWrap.querySelectorAll('.carousel-slide');
+            const slide = slides[index];
+            if (!slide) return;
+            const box = slide.querySelector('.tg-embed-box');
+            if (!box) return;
+            lightboxMovedOriginalParent = slide;
+            lightboxMovedBox = box;
+            box.className = 'lightbox-embed-box';
+            const target = document.getElementById('lightbox-embed-wrap');
+            target.innerHTML = '';
+            target.appendChild(box);
         }
 
-        // Iframe ko lightbox ki width tak zoom karta hai (photo real size / usse bhi badi dikhti hai)
-        function fitLightbox(box) {
-            const iframe = box.querySelector('iframe');
-            if (!iframe) return;
-            const stageW = document.getElementById('lb-stage').clientWidth || 672;
-            const iw = iframe.offsetWidth || 320;
-            const ih = iframe.offsetHeight || 240;
-            const scale = Math.min(Math.max(stageW / iw, 1), 4);
-            iframe.style.transform = `scale(${scale})`;
-            iframe.style.transformOrigin = 'top center';
-            box.style.minHeight = 'unset';
-            box.style.height = Math.min(ih * scale, window.innerHeight * 0.78) + 'px';
-            iframe.style.setProperty('margin-top', (-56 * scale) + 'px', 'important');
-            // Caption row (DEV-XXXXX / t.me link / views) chhupao: zoom ke proportion me bottom crop
-            box.style.setProperty('--lbCrop', (72 * scale) + 'px');
+        function updateLightboxChrome() {
+            const count = parseInt(lightboxSourceWrap.getAttribute('data-count'), 10);
+            const multi = count > 1;
+            const badge = document.getElementById('lightbox-badge');
+            badge.classList.toggle('hidden', !multi);
+            badge.innerText = `${lightboxIndex + 1}/${count}`;
+            document.getElementById('lightbox-prev').classList.toggle('hidden', !multi);
+            document.getElementById('lightbox-next').classList.toggle('hidden', !multi);
         }
 
-        function lbMove(dir) {
-            if (!lbCardId) return;
-            const embeds = embedRegistry[lbCardId];
-            lbIndex = (lbIndex + dir + embeds.length) % embeds.length;
-            renderLbSlide();
+        function lightboxMove(dir) {
+            if (!lightboxSourceWrap) return;
+            const count = parseInt(lightboxSourceWrap.getAttribute('data-count'), 10);
+            lightboxIndex = (lightboxIndex + dir + count) % count;
+            moveSlideToLightbox(lightboxIndex);
+            updateLightboxChrome();
         }
 
-        function closePhotoLightbox() {
-            const lb = document.getElementById('photo-lightbox');
-            lb.classList.add('hidden');
-            lb.classList.remove('flex');
-            document.body.style.overflow = '';
-            lbCardId = null;
+        function closeLightbox() {
+            if (lightboxMovedBox && lightboxMovedOriginalParent) {
+                lightboxMovedBox.className = 'tg-embed-box';
+                lightboxMovedOriginalParent.appendChild(lightboxMovedBox);
+                lightboxMovedBox = null;
+                lightboxMovedOriginalParent = null;
+            }
+            lightboxSourceWrap = null;
+            const modal = document.getElementById('photo-lightbox');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.getElementById('lightbox-embed-wrap').innerHTML = '';
         }
-
-        document.addEventListener('keydown', (e) => {
-            if (document.getElementById('photo-lightbox').classList.contains('hidden')) return;
-            if (e.key === 'Escape') closePhotoLightbox();
-            if (e.key === 'ArrowLeft') lbMove(-1);
-            if (e.key === 'ArrowRight') lbMove(1);
-        });
 
         async function loadOwnerListings() {
             const container = document.getElementById("owner-listings-container");
@@ -932,6 +903,7 @@
                                         <i class="fa-solid fa-share-nodes"></i>
                                     </button>
                                 </div>
+                                <span class="text-[10px] text-gray-500 block text-right">Owner ID: ${room.owner_id}</span>
                             </div>
                         `;
                     }
